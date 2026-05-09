@@ -1,4 +1,11 @@
-
+<div align="center">
+  <br/>
+  <h1>🎬📸🎥 VIDEO FRAME EXTRACTOR PRO 🎥📸🎬</h1>
+  <p>
+    <strong>Extract frames from any video • Customizable settings • Bulk download</strong>
+  </p>
+  <br/>
+</div>
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://video-frame-extractor.streamlit.app)
 [![GitHub stars](https://img.shields.io/github/stars/NeuralBishal/video-frame-extractor)](https://github.com/NeuralBishal/video-frame-extractor/stargazers)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -9,6 +16,10 @@ A powerful, production-ready web application that extracts frames from any video
 🚀 Live Demo
 
 https://video-frame-extractor-ypuahusgncnfuzp5ekdebd.streamlit.app
+
+💖 Support
+
+If you find this project useful, please give it a ⭐ on GitHub!
 
 📸 Screenshots
 <img width="1680" height="1050" alt="Screenshot 2026-05-09 at 12 03 37 PM" src="https://github.com/user-attachments/assets/6dd60dc0-37d0-48fa-bf9d-c152683ebc88" />
