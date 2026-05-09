@@ -353,27 +353,28 @@ if video_path and os.path.exists(video_path):
     if max_frames > 0 and estimated_frames > max_frames:
         estimated_frames = max_frames
     
-# Visual timeline representation
-timeline_length = 50
-start_pos = int((start_time / duration_seconds) * timeline_length) if duration_seconds > 0 else 0
-end_pos = int((end_time / duration_seconds) * timeline_length) if duration_seconds > 0 else timeline_length
-
-timeline_bar = "░" * timeline_length
-timeline_list = list(timeline_bar)
-for i in range(start_pos, min(end_pos, len(timeline_list))):
-    timeline_list[i] = "█"
-timeline_visual = "".join(timeline_list)
-
-st.markdown(f"""
-<div class="info-box">
-    <strong>📊 Selected Range Details:</strong><br>
-    • ⏱️ Time: {start_time:.1f}s - {end_time:.1f}s<br>
-    • 📏 Duration: {end_time - start_time:.1f} seconds<br>
-    • 🎞️ Frames in range: {frames_in_range:,}<br>
-    • 💾 Frames to extract: {estimated_frames:,} (interval: every {frame_interval} frame)
-</div>
-""", unsafe_allow_html=True)
-
-# Display timeline
-st.text(f"Timeline: {timeline_visual}")
-st.text(f"{start_time:.1f}s" + " " * (timeline_length - 10) + f"{end_time:.1f}s")
+    # Visual timeline representation
+    timeline_length = 50
+    if duration_seconds > 0:
+        start_pos = int((start_time / duration_seconds) * timeline_length)
+        end_pos = int((end_time / duration_seconds) * timeline_length)
+        
+        timeline_bar = "░" * timeline_length
+        timeline_list = list(timeline_bar)
+        for i in range(start_pos, min(end_pos, len(timeline_list))):
+            timeline_list[i] = "█"
+        timeline_visual = "".join(timeline_list)
+        
+        st.markdown(f"""
+        <div class="info-box">
+            <strong>📊 Selected Range Details:</strong><br>
+            • ⏱️ Time: {start_time:.1f}s - {end_time:.1f}s<br>
+            • 📏 Duration: {end_time - start_time:.1f} seconds<br>
+            • 🎞️ Frames in range: {frames_in_range:,}<br>
+            • 💾 Frames to extract: {estimated_frames:,} (interval: every {frame_interval} frame)
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Display timeline
+        st.text(f"Timeline: {timeline_visual}")
+        st.text(f"{start_time:.1f}s" + " " * (timeline_length - 10) + f"{end_time:.1f}s")
