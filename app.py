@@ -222,20 +222,6 @@ with st.sidebar:
             value=0,
             help="Limit total frames extracted"
         )
-        
-        start_time = st.number_input(
-            "Start time (seconds)",
-            min_value=0.0,
-            value=0.0,
-            step=1.0
-        )
-        
-        duration = st.number_input(
-            "Duration (seconds, 0=all)",
-            min_value=0.0,
-            value=0.0,
-            step=1.0
-        )
 
 # Main content
 st.markdown("## 📁 Input Video")
@@ -316,150 +302,78 @@ if video_path and os.path.exists(video_path):
     with col4:
         st.metric("📐 Resolution", f"{width}×{height}")
     
-    # Estimated output
-    estimated_frames = int((total_frames - int(start_time * fps)) / frame_interval) if duration == 0 else int((duration * fps) / frame_interval)
+    # Video Player & Timeline Selection
+    st.markdown("---")
+    st.markdown("## 🎬 Video Preview & Timeline Selection")
+    st.markdown("*Watch the video and select the exact time range for frame extraction*")
+    
+    # Display video player
+    try:
+        with open(video_path, 'rb') as f:
+            video_bytes = f.read()
+        st.video(video_bytes)
+    except Exception as e:
+        st.warning(f"Video preview not available: {str(e)}")
+    
+    # Timeline selection sliders
+    st.markdown("### 📍 Select Time Range")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        start_time = st.slider(
+            "Start Time (seconds)",
+            min_value=0.0,
+            max_value=float(duration_seconds),
+            value=0.0,
+            step=0.5,
+            help="Select where to start extracting frames"
+        )
+    
+    with col2:
+        end_time = st.slider(
+            "End Time (seconds)",
+            min_value=0.0,
+            max_value=float(duration_seconds),
+            value=float(duration_seconds),
+            step=0.5,
+            help="Select where to stop extracting frames"
+        )
+    
+    # Validate time range
+    if start_time >= end_time:
+        st.error("❌ End time must be greater than start time!")
+        st.stop()
+    
+    # Calculate frames in selected range
+    start_frame = int(start_time * fps)
+    end_frame = int(end_time * fps)
+    frames_in_range = end_frame - start_frame
+    estimated_frames = int(frames_in_range / frame_interval) if frames_in_range > 0 else 0
+    
     if max_frames > 0 and estimated_frames > max_frames:
         estimated_frames = max_frames
     
-    st.markdown(f"""
-    <div class="info-box">
-        💡 <strong>Estimated frames to extract:</strong> {estimated_frames:,} frames
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Extract button
-    st.markdown("---")
-    if st.button("🚀 START EXTRACTION", type="primary", use_container_width=True):
-        # Progress tracking
-        progress_bar = st.progress(0)
-        status_text = st.empty()
-        preview_image = st.empty()
-        
-        # Create output directory
-        output_dir = tempfile.mkdtemp()
-        frame_count = 0
-        saved_count = 0
-        start_frame = int(start_time * fps)
-        
-        # Calculate end frame
-        if duration > 0:
-            end_frame = start_frame + int(duration * fps)
-        else:
-            end_frame = total_frames
-        
-        # Open video
-        cap = cv2.VideoCapture(video_path)
-        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
-        
-        start_time_extract = time.time()
-        
-        while True:
-            success, frame = cap.read()
-            
-            if not success or frame_count >= end_frame:
-                break
-            
-            if frame_count < start_frame:
-                frame_count += 1
-                continue
-            
-            if max_frames > 0 and saved_count >= max_frames:
-                break
-            
-            if (frame_count - start_frame) % frame_interval == 0:
-                if resize_frames:
-                    frame = cv2.resize(frame, (resize_width, resize_height))
-                
-                frame_path = os.path.join(output_dir, f'frame_{saved_count:06d}.jpg')
-                cv2.imwrite(frame_path, frame, [cv2.IMWRITE_JPEG_QUALITY, quality])
-                saved_count += 1
-                
-                # Show preview every 10 frames
-                if saved_count % 10 == 0:
-                    preview_image.image(frame, caption=f"Preview: Frame {saved_count}", use_container_width=True)
-            
-            frame_count += 1
-            
-            # Update progress
-            progress = (frame_count - start_frame) / (end_frame - start_frame) if end_frame > start_frame else 1
-            progress_bar.progress(min(progress, 1.0))
-            
-            elapsed_time = time.time() - start_time_extract
-            fps_processing = (frame_count - start_frame) / elapsed_time if elapsed_time > 0 else 0
-            status_text.info(f"📊 Processing: {frame_count:,}/{end_frame:,} frames | 💾 Saved: {saved_count:,} frames | ⚡ Speed: {fps_processing:.1f} fps")
-        
-        cap.release()
-        extraction_time = time.time() - start_time_extract
-        
-        # Completion
-        progress_bar.progress(1.0)
-        
-        if saved_count > 0:
-            # Create ZIP
-            with st.spinner("Creating ZIP archive..."):
-                zip_path = tempfile.NamedTemporaryFile(delete=False, suffix='.zip').name
-                with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                    for filename in os.listdir(output_dir):
-                        filepath = os.path.join(output_dir, filename)
-                        zipf.write(filepath, filename)
-                
-                zip_size = os.path.getsize(zip_path) / (1024 * 1024)
-            
-            # Success message
-            st.balloons()
-            st.markdown(f"""
-            <div class="success-badge" style="background: #d4edda; padding: 1rem; text-align: center;">
-                <h3>✅ Extraction Complete!</h3>
-                <p>📊 Saved {saved_count:,} frames from {frame_count:,} total frames</p>
-                <p>⏱️ Processing time: {extraction_time:.1f} seconds</p>
-                <p>💾 ZIP size: {zip_size:.2f} MB</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Download button
-            with open(zip_path, 'rb') as f:
-                st.download_button(
-                    label=f"📥 Download Frames ({saved_count} images, {zip_size:.1f} MB)",
-                    data=f,
-                    file_name=f"frames_{os.path.splitext(video_filename)[0]}.zip",
-                    mime="application/zip",
-                    use_container_width=True
-                )
-            
-            # Preview gallery
-            st.markdown("## 🖼️ Frame Gallery")
-            frame_files = sorted([f for f in os.listdir(output_dir) if f.endswith('.jpg')])
-            preview_cols = st.columns(min(6, len(frame_files)))
-            for i, col in enumerate(preview_cols):
-                if i < len(frame_files):
-                    preview_path = os.path.join(output_dir, frame_files[i])
-                    col.image(preview_path, caption=f"Frame {i+1}", use_container_width=True)
-            
-            if len(frame_files) > 6:
-                st.caption(f"Showing first 6 frames out of {len(frame_files)} total frames")
-            
-            # Cleanup
-            for filename in os.listdir(output_dir):
-                os.unlink(os.path.join(output_dir, filename))
-            os.rmdir(output_dir)
-        else:
-            st.warning("No frames were extracted. Try adjusting the settings.")
-    
-    # Clear button
-    if st.button("🗑️ Clear Video", use_container_width=True):
-        if video_path and os.path.exists(video_path):
-            os.unlink(video_path)
-        st.rerun()
+# Visual timeline representation
+timeline_length = 50
+start_pos = int((start_time / duration_seconds) * timeline_length) if duration_seconds > 0 else 0
+end_pos = int((end_time / duration_seconds) * timeline_length) if duration_seconds > 0 else timeline_length
 
-else:
-    if video_path is None:
-        st.info("👈 Upload a video or provide a URL to get started!")
+timeline_bar = "░" * timeline_length
+timeline_list = list(timeline_bar)
+for i in range(start_pos, min(end_pos, len(timeline_list))):
+    timeline_list[i] = "█"
+timeline_visual = "".join(timeline_list)
 
-# Footer
-st.markdown("---")
-st.markdown("""
-<div style="text-align: center; color: #666; padding: 2rem;">
-    <p>Made with ❤️ using OpenCV & Streamlit</p>
-    <p style="font-size: 0.9rem;">© 2024 Video Frame Extractor Pro</p>
+st.markdown(f"""
+<div class="info-box">
+    <strong>📊 Selected Range Details:</strong><br>
+    • ⏱️ Time: {start_time:.1f}s - {end_time:.1f}s<br>
+    • 📏 Duration: {end_time - start_time:.1f} seconds<br>
+    • 🎞️ Frames in range: {frames_in_range:,}<br>
+    • 💾 Frames to extract: {estimated_frames:,} (interval: every {frame_interval} frame)
 </div>
 """, unsafe_allow_html=True)
+
+# Display timeline
+st.text(f"Timeline: {timeline_visual}")
+st.text(f"{start_time:.1f}s" + " " * (timeline_length - 10) + f"{end_time:.1f}s")
