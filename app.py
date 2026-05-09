@@ -378,3 +378,119 @@ if video_path and os.path.exists(video_path):
         # Display timeline
         st.text(f"Timeline: {timeline_visual}")
         st.text(f"{start_time:.1f}s" + " " * (timeline_length - 10) + f"{end_time:.1f}s")
+    
+    # Extract button
+    if st.button("🚀 START EXTRACTION", type="primary", width="stretch"):
+        # Progress tracking
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        preview_image = st.empty()
+        
+        # Create output directory
+        output_dir = tempfile.mkdtemp()
+        frame_count = 0
+        saved_count = 0
+        
+        # Open video
+        cap = cv2.VideoCapture(video_path)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+        
+        start_time_extract = time.time()
+        current_frame = start_frame
+        
+        while current_frame < end_frame:
+            success, frame = cap.read()
+            
+            if not success:
+                break
+            
+            if max_frames > 0 and saved_count >= max_frames:
+                break
+            
+            if (current_frame - start_frame) % frame_interval == 0:
+                if resize_frames:
+                    frame = cv2.resize(frame, (resize_width, resize_height))
+                
+                frame_path = os.path.join(output_dir, f'frame_{saved_count:06d}.jpg')
+                cv2.imwrite(frame_path, frame, [cv2.IMWRITE_JPEG_QUALITY, quality])
+                saved_count += 1
+                
+                # Show preview every 10 frames
+                if saved_count % 10 == 0:
+                    preview_image.image(frame, caption=f"Preview: Frame {saved_count}", use_container_width=True)
+            
+            current_frame += 1
+            frame_count += 1
+            
+            # Update progress
+            progress = (current_frame - start_frame) / frames_in_range if frames_in_range > 0 else 1
+            progress_bar.progress(min(progress, 1.0))
+            
+            elapsed_time = time.time() - start_time_extract
+            fps_processing = frame_count / elapsed_time if elapsed_time > 0 else 0
+            status_text.info(f"📊 Processing: {frame_count:,}/{frames_in_range:,} frames | 💾 Saved: {saved_count:,} frames | ⚡ Speed: {fps_processing:.1f} fps")
+        
+        cap.release()
+        extraction_time = time.time() - start_time_extract
+        
+        # Completion
+        progress_bar.progress(1.0)
+        
+        if saved_count > 0:
+            # Create ZIP
+            with st.spinner("Creating ZIP archive..."):
+                zip_path = tempfile.NamedTemporaryFile(delete=False, suffix='.zip').name
+                with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    for filename in os.listdir(output_dir):
+                        filepath = os.path.join(output_dir, filename)
+                        zipf.write(filepath, filename)
+                
+                zip_size = os.path.getsize(zip_path) / (1024 * 1024)
+            
+            # Success message
+            st.balloons()
+            st.markdown(f"""
+            <div class="success-badge" style="background: #d4edda; padding: 1rem; text-align: center;">
+                <h3>✅ Extraction Complete!</h3>
+                <p>📊 Saved {saved_count:,} frames from {frame_count:,} frames</p>
+                <p>⏱️ Processing time: {extraction_time:.1f} seconds</p>
+                <p>💾 ZIP size: {zip_size:.2f} MB</p>
+                <p>🎯 Time range: {start_time:.1f}s - {end_time:.1f}s</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Download button
+            with open(zip_path, 'rb') as f:
+                st.download_button(
+                    label=f"📥 Download Frames ({saved_count} images, {zip_size:.1f} MB)",
+                    data=f,
+                    file_name=f"frames_{os.path.splitext(video_filename)[0]}.zip",
+                    mime="application/zip",
+                    width="stretch"
+                )
+            
+            # Preview gallery
+            st.markdown("## 🖼️ Frame Gallery")
+            frame_files = sorted([f for f in os.listdir(output_dir) if f.endswith('.jpg')])
+            if frame_files:
+                preview_cols = st.columns(min(6, len(frame_files)))
+                for i, col in enumerate(preview_cols):
+                    if i < len(frame_files):
+                        preview_path = os.path.join(output_dir, frame_files[i])
+                        col.image(preview_path, caption=f"Frame {i+1}", use_container_width=True)
+                
+                if len(frame_files) > 6:
+                    st.caption(f"Showing first 6 frames out of {len(frame_files)} total frames")
+            
+            # Cleanup
+            for filename in os.listdir(output_dir):
+                os.unlink(os.path.join(output_dir, filename))
+            os.rmdir(output_dir)
+        else:
+            st.warning("No frames were extracted. Try adjusting the settings.")
+    
+    # Clear button
+    if st.button("🗑️ Clear Video", width="stretch"):
+        if video_path and os.path.exists(video_path):
+            os.unlink(video_path)
+        st.rerun()
