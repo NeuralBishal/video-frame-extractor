@@ -1,289 +1,298 @@
+
 <div align="center">
   <br/>
   <h1>🎬📸🎥 VIDEO FRAME EXTRACTOR PRO 🎥📸🎬</h1>
   <p>
-    <strong>Extract frames from any video • Customizable settings • Bulk download</strong>
+    <strong>Extract frames from any video • Watch • Select • Extract • Download</strong>
   </p>
   <br/>
 </div>
 
-
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://video-frame-extractor.streamlit.app)
 [![GitHub stars](https://img.shields.io/github/stars/NeuralBishal/video-frame-extractor)](https://github.com/NeuralBishal/video-frame-extractor/stargazers)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-📹 Video Frame Extractor Pro
 
-A powerful, production-ready web application that extracts frames from any video file or URL with customizable settings. Built with Streamlit and OpenCV, deployed on Streamlit Cloud.
+# 🎬 Video Frame Extractor Pro
 
-🚀 Live Demo
+A powerful, production-ready web application that extracts frames from any video file or URL with customizable settings. Built with **Streamlit** and **OpenCV**, deployed on Streamlit Cloud.
 
-https://video-frame-extractor-ypuahusgncnfuzp5ekdebd.streamlit.app
+## 🚀 Live Demo
 
-💖 Support
+**Try it now:** [https://video-frame-extractor-ypuahusgncnfuzp5ekdebd.streamlit.app](https://video-frame-extractor-ypuahusgncnfuzp5ekdebd.streamlit.app)
+
+## ✨ What's New!
+
+- 🎬 **Video Player** - Watch videos directly in the app
+- 📍 **Timeline Selection** - Select exact start/end times with sliders
+- 📊 **Visual Timeline Bar** - See your selected range graphically
+- 🔢 **Real-time Frame Count** - Know exactly how many frames will extract
+- 🎯 **Range Calculation** - Automatic duration and frame calculation
+
+## 💖 Support
 
 If you find this project useful, please give it a ⭐ on GitHub!
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/neural-bishal-01627136a/)
 
-📸 Screenshots
-<img width="1680" height="1050" alt="Screenshot 2026-05-09 at 12 03 37 PM" src="https://github.com/user-attachments/assets/6dd60dc0-37d0-48fa-bf9d-c152683ebc88" />
-<img width="1680" height="1050" alt="Screenshot 2026-05-09 at 12 06 25 PM" src="https://github.com/user-attachments/assets/7435a7f2-c102-408e-b95e-03e2618b97e3" />
-<img width="1680" height="1050" alt="Screenshot 2026-05-09 at 12 04 13 PM" src="https://github.com/user-attachments/assets/edaab252-975c-43a1-b07f-3989770c21af" />
-<img width="1680" height="1050" alt="Screenshot 2026-05-09 at 12 04 28 PM" src="https://github.com/user-attachments/assets/55ed8b00-c11e-4641-ab5c-09294fec36ff" />
-<img width="1680" height="1050" alt="Screenshot 2026-05-09 at 12 05 29 PM" src="https://github.com/user-attachments/assets/d8c0f4ce-e682-48f6-9332-dbd5547b8515" />
-<img width="1680" height="1050" alt="Screenshot 2026-05-09 at 12 05 52 PM" src="https://github.com/user-attachments/assets/fbbd0d1d-d261-4b9f-a795-80c0e48c9d4d" />
-<img width="1680" height="1050" alt="Screenshot 2026-05-09 at 12 05 45 PM" src="https://github.com/user-attachments/assets/7d3e6b37-160f-45d0-bc4c-a5ab28f5437e" />
-<img width="1680" height="1050" alt="Screenshot 2026-05-09 at 12 06 09 PM" src="https://github.com/user-attachments/assets/5c0d0634-51f3-4212-85fe-ee14bfd3726b" />
-<img width="1680" height="1050" alt="Screenshot 2026-05-09 at 12 06 45 PM" src="https://github.com/user-attachments/assets/ede12f48-3f12-45f4-9e1a-3c4f04c2eedd" />
-<img width="1680" height="1050" alt="Screenshot 2026-05-09 at 12 09 56 PM" src="https://github.com/user-attachments/assets/3e49317b-af48-4864-8e32-c8521df4d2e9" />
-<img width="1680" height="1050" alt="Screenshot 2026-05-09 at 12 15 27 PM" src="https://github.com/user-attachments/assets/dfe317cd-37b0-4051-b082-7814d964fa14" />
+## 📸 Screenshots
 
+### Main Interface
+![Main Interface](https://github.com/user-attachments/assets/6dd60dc0-37d0-48fa-bf9d-c152683ebc88)
 
+### Video Player & Timeline Selection
+![Video Player](https://github.com/user-attachments/assets/7435a7f2-c102-408e-b95e-03e2618b97e3)
 
+### Settings Panel
+![Settings](https://github.com/user-attachments/assets/edaab252-975c-43a1-b07f-3989770c21af)
 
-📋 Table of Contents
+### Video Information Display
+![Video Info](https://github.com/user-attachments/assets/55ed8b00-c11e-4641-ab5c-09294fec36ff)
 
-Overview
-Key Features
-How It Works
-Technical Architecture
-Installation
-Usage Guide
-Settings Explanation
-Use Cases
-Performance
-Limitations
-Future Enhancements
-Tech Stack
-Deployment
-Contributing
-License
+### Frame Extraction in Progress
+![Extraction](https://github.com/user-attachments/assets/d8c0f4ce-e682-48f6-9332-dbd5547b8515)
 
-📖 Overview:-
+### Results & Gallery
+![Results](https://github.com/user-attachments/assets/fbbd0d1d-d261-4b9f-a795-80c0e48c9d4d)
+
+### Mobile Responsive View
+![Mobile](https://github.com/user-attachments/assets/ede12f48-3f12-45f4-9e1a-3c4f04c2eedd)
+
+## 📋 Table of Contents
+
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [How It Works](#how-it-works)
+- [Technical Architecture](#technical-architecture)
+- [Installation](#installation)
+- [Usage Guide](#usage-guide)
+- [Settings Explanation](#settings-explanation)
+- [Use Cases](#use-cases)
+- [Performance](#performance)
+- [Limitations](#limitations)
+- [Future Enhancements](#future-enhancements)
+- [Tech Stack](#tech-stack)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+- [License](#license)
+
+## 📖 Overview
 
 Video Frame Extractor Pro is a web-based tool that allows users to extract frames from videos with precise control over extraction parameters. Whether you need every single frame for analysis or just key frames for thumbnails, this app provides a simple interface to get the job done.
-No database, no user accounts, no permanent storage - just upload, extract, and download.
 
-✨ Key Features
+**✨ New!** Now includes a **video player** and **interactive timeline selection** - watch your video and select exact start/end times just like a video editing app!
 
->>Core Functionality
+**No database, no user accounts, no permanent storage** - just upload, watch, select, extract, and download.
 
-  Multiple Input Methods: Upload video files (MP4, AVI, MOV, MKV, WEBM, FLV) or provide direct video URLs
-  Smart Frame Extraction: Extract every Nth frame with configurable intervals
-  Quality Control: Adjust JPEG compression quality (30-100%)
-  Image Resizing: Scale frames to custom dimensions
-  Temporal Control: Set start time and duration for focused extraction
-  Batch Limiting: Cap maximum frames to prevent excessive output
-  
->>User Experience
+## ✨ Key Features
 
-  Real-time Progress Tracking: Live progress bar with processing speed (FPS)
-  Live Frame Preview: See extracted frames as they're processed
-  Bulk Download: All frames packaged as a single ZIP file
-  Video Information Display: Shows total frames, FPS, duration, resolution
-  Responsive Design: Works on desktop, tablet, and mobile devices
-  
->>Privacy & Security
+### Core Functionality
+- 🎬 **Video Player** - Watch videos directly in the app before extraction
+- 📍 **Timeline Selection** - Visual start/end time sliders for precise control
+- 📊 **Visual Timeline Bar** - Graphical representation of selected range
+- 🔢 **Real-time Frame Count** - See how many frames will be extracted as you adjust
+- 📤 **Multiple Input Methods** - Upload video files or provide direct video URLs
+- 🎯 **Smart Frame Extraction** - Extract every Nth frame with configurable intervals
+- 🎨 **Quality Control** - Adjust JPEG compression quality (30-100%)
+- 📐 **Image Resizing** - Scale frames to custom dimensions
+- ⏱️ **Temporal Control** - Select exact time ranges for focused extraction
+- 🛡️ **Batch Limiting** - Cap maximum frames to prevent excessive output
 
-  No Database: Zero permanent storage
-  Auto-Cleanup: All files deleted immediately after download
-  No Tracking: No user data collected
-  Stateless Operation: Each session is completely independent
-  
-⚙️ How It Works
+### User Experience
+- 📊 **Real-time Progress Tracking** - Live progress bar with processing speed (FPS)
+- 🖼️ **Live Frame Preview** - See extracted frames as they're processed
+- 📦 **Bulk Download** - All frames packaged as a single ZIP file
+- ℹ️ **Video Information Display** - Shows total frames, FPS, duration, resolution
+- 📱 **Responsive Design** - Works on desktop, tablet, and mobile devices
 
->>Data Flow
+### Privacy & Security
+- 🗄️ **No Database** - Zero permanent storage
+- 🧹 **Auto-Cleanup** - All files deleted immediately after download
+- 🚫 **No Tracking** - No user data collected
+- 🔄 **Stateless Operation** - Each session is completely independent
 
-  text
-  1. User uploads video (or provides URL)
-     ↓
-  2. Video saved to temporary storage
-     ↓
-  3. OpenCV reads video metadata
-     ↓
-  4. User configures extraction settings
-     ↓
-  5. Frames extracted based on parameters
-     ↓
-  6. Frames compressed into ZIP archive
-     ↓
-  7. User downloads ZIP file
-     ↓
-  8. ALL temporary files automatically deleted
-  Frame Extraction Logic
+## ⚙️ How It Works
 
+### Data Flow
+User uploads video (or provides URL)
+↓
+Video saved to temporary storage
+↓
+App displays video player and information
+↓
+User watches video and selects start/end times
+↓
+User configures extraction settings in sidebar
+↓
+Frames extracted based on selected time range
+↓
+Frames compressed into ZIP archive
+↓
+User downloads ZIP file
+↓
+ALL temporary files automatically deleted
+text
 
-# Extracts every Nth frame based on user setting
-if frame_count % frame_interval == 0:
-    save_frame()
-    
+### Frame Extraction Logic
+```python
+# Extracts only frames within selected time range
+if start_time <= current_time <= end_time:
+    if frame_count % frame_interval == 0:
+        save_frame()
+
 # Example:
 # Total frames: 720
-# N = 30 → Extracts 24 frames (1 per second at 30fps)
-# N = 1 → Extracts all 720 frames
-
+# Selected range: 10s - 20s (300 frames)
+# N = 30 → Extracts 10 frames
+# N = 1 → Extracts all 300 frames in range
 🏗️ Technical Architecture
 
->>Technology Stack
+Technology Stack
 
-  Layer	Technology
-  Frontend	Streamlit (HTML/CSS embedded)
-  Backend	Python 3.9+
-  Computer Vision	OpenCV 4.8+
-  Image Processing	Pillow, NumPy
-  Deployment	Streamlit Cloud
-  Version Control	Git & GitHub
-  Project Structure
+Layer	Technology
+Frontend	Streamlit (HTML/CSS embedded)
+Backend	Python 3.11+
+Computer Vision	OpenCV 4.8+
+Image Processing	Pillow, NumPy
+Deployment	Streamlit Cloud
+Version Control	Git & GitHub
+Project Structure
 
-
+text
 video-frame-extractor/
-├── app.py              # Main application (15KB)
+├── app.py              # Main application (20KB)
 ├── requirements.txt    # Python dependencies
 ├── packages.txt        # System dependencies
 ├── README.md          # Documentation
 ├── .gitignore         # Git ignore rules
 └── runtime.txt        # Python version spec
+Dependencies
 
->>Dependencies
-  streamlit>=1.25.0      # Web framework
-  opencv-python-headless  # Video processing
-  numpy>=1.21.0          # Numerical operations
-  Pillow>=9.0.0          # Image handling
-
+txt
+streamlit>=1.28.0      # Web framework
+opencv-python-headless  # Video processing
+numpy>=1.24.0          # Numerical operations
+Pillow>=10.0.0         # Image handling
 💻 Installation
 
->>Local Development
+Local Development
 
-  bash
-  # Clone the repository
-  git clone https://github.com/NeuralBishal/video-frame-extractor.git
-  cd video-frame-extractor
-  
-  # Create virtual environment (optional)
-  python -m venv venv
-  source venv/bin/activate  # On Windows: venv\Scripts\activate
-  
-  # Install dependencies
-  pip install -r requirements.txt
-  
-  # Run the app
-  streamlit run app.py
-  
-  # Open browser to http://localhost:8501
-  
->>Docker (Optional)
+bash
+# Clone the repository
+git clone https://github.com/NeuralBishal/video-frame-extractor.git
+cd video-frame-extractor
 
-  bash
-  # Build image
-  docker build -t video-frame-extractor .
-  
-  # Run container
-  docker run -p 8501:8501 video-frame-extractor
-  
-  # Access at http://localhost:8501
-  
+# Create virtual environment (optional)
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the app
+streamlit run app.py
+
+# Open browser to http://localhost:8501
+Docker (Optional)
+
+bash
+# Build image
+docker build -t video-frame-extractor .
+
+# Run container
+docker run -p 8501:8501 video-frame-extractor
+
+# Access at http://localhost:8501
 📚 Usage Guide
 
->>Step-by-Step Tutorial
+Step-by-Step Tutorial
 
-  Step 1: Input Video
-  Choose "Upload Video File" to upload from your computer
-  OR select "Video URL" and paste a direct video link
-  
-  Step 2: Configure Settings
-  Adjust extraction parameters in the sidebar
-  Preview estimated frames to extract
-  
-  Step 3: Extract Frames
-  Click "START EXTRACTION"
-  Watch real-time progress and preview
-  
-  Step 4: Download
-  Click "Download Frames" to get ZIP file
-  All frames saved as frame_000001.jpg, etc.
-  
+Step 1: Input Video
+
+Choose "Upload Video File" to upload from your computer
+OR select "Video URL" and paste a direct video link
+Step 2: Watch & Select
+
+Watch your video in the built-in player
+Use the Start Time and End Time sliders to select your range
+Watch the visual timeline bar update in real-time
+Step 3: Configure Settings
+
+Adjust extraction parameters in the sidebar
+See estimated frames update automatically
+Step 4: Extract Frames
+
+Click "START EXTRACTION"
+Watch real-time progress and frame previews
+Step 5: Download
+
+Click "Download Frames" to get ZIP file
+All frames saved as frame_000001.jpg, etc.
 🎛️ Settings Explanation
+
 Basic Settings
 
 Setting	Range	Default	Description
 Extract every N frame	1-120	30	1 = all frames, 30 = 1 frame/second (30fps)
 JPEG Quality	30-100	85	Higher = better quality, larger file size
-
 Resize Options
 
 Setting	Description	Use Case
 Resize Frames	Enable/disable scaling	When smaller files needed
 Width	Target width in pixels	1280 for HD
 Height	Target height in pixels	720 for HD
+Timeline Selection (New!)
 
+Setting	Description	Example
+Start Time	Where to begin extraction	10.5 seconds
+End Time	Where to stop extraction	25.0 seconds
 Advanced Options
 
 Setting	Description	Example
 Max Frames	Limit total extracted	100 (prevents overload)
-Start Time	Skip beginning of video	10s (skip intro)
-Duration	Extract for specific time	30s (just the highlight)
-
 Calculation Formulas
 
-Frames Extracted = Total Frames ÷ Frame Interval
+text
+Frames in Range = (End Time - Start Time) × FPS
+Frames Extracted = Frames in Range ÷ Frame Interval
 
 Example:
-Total frames: 720
+Video: 30fps, Range: 10s-20s (10 seconds)
+Frames in range: 300 frames
 Frame interval: 30
-Frames extracted: 24
-
-Estimated Size = Frames Extracted × Average Frame Size
-
-Example:
-24 frames × 100KB = 2.4MB (without resize)
-24 frames × 25KB = 600KB (with 50% resize)
-
-
+Frames extracted: 10 frames
 🎯 Use Cases
 
 1. Security Footage Analysis
 
 yaml
-Settings:
-  Interval: 300 (1 frame every 10 seconds at 30fps)
-  Quality: 70
-  Resize: 640×360
-Result: Compact review of long footage
+Timeline: Select suspicious time range
+Interval: 300 (1 frame every 10 seconds)
+Quality: 70
+Resize: 640×360
+Result: Compact review of relevant footage
 2. Sports Highlights
 
 yaml
-Settings:
-  Interval: 1 (every frame)
-  Start time: 300s (5 min in)
-  Duration: 45s
+Timeline: Select goal/play time range
+Interval: 1 (every frame)
 Result: Everything from key 45-second play
 3. Machine Learning Dataset
 
 yaml
-Settings:
-  Interval: 30
-  Resize: 224×224
-  Quality: 95
-  Max frames: 5000
+Timeline: Full video or specific scenes
+Interval: 30
+Resize: 224×224
+Quality: 95
+Max frames: 5000
 Result: Standardized training images
 4. Thumbnail Generation
 
 yaml
-Settings:
-  Interval: 600 (1 frame per 20 seconds)
-  Resize: 320×180
-  Quality: 80
+Timeline: Best moments in video
+Interval: 600 (1 frame per 20 seconds)
+Resize: 320×180
+Quality: 80
 Result: Small preview thumbnails
-5. YouTube Video Analysis
-
-yaml
-Settings:
-  Input: Video URL
-  Interval: 60
-  Start time: 0
-  Duration: 0
-Result: Sparse sampling of entire video
-
 📊 Performance Metrics
 
 Processing Speed
@@ -305,7 +314,6 @@ Max file upload: 200MB (Streamlit Cloud limit)
 Max frames per request: 10,000 (configurable)
 Processing timeout: 5 minutes (Streamlit Cloud)
 Simultaneous users: Unlimited (but queue-based)
-
 ⚠️ Limitations
 
 Current Constraints
@@ -316,14 +324,12 @@ No database	No saved history	User must track downloads
 Stateless	No resume capability	Process in segments
 Single video at a time	No batch processing	Process sequentially
 No GPU acceleration	CPU-only processing	Use lower resolutions
-Limited formats	Some codecs unsupported	Convert video first
 Known Issues
 
 Large videos (>200MB): Must use URL method
 Exotic codecs: May fail to open
 Audio extraction: Not supported (frames only)
 Variable framerate: Estimate may be inaccurate
-
 🔮 Future Enhancements
 
 Planned Features
@@ -334,17 +340,15 @@ Custom output naming patterns
 Watermark overlay on frames
 Scene detection (extract only on changes)
 Facial recognition in frames
-Frame differencing (highlight motion)
-Export as video (reverse operation)
-
->>Under Consideration
+Keyboard shortcuts for timeline navigation
+Frame thumbnails on timeline
+Under Consideration
 
 User accounts with Supabase
 Extraction history (database)
 Cloud storage integration (S3, Google Drive)
 API endpoint for programmatic access
 Mobile app (React Native)
-
 🛠️ Tech Stack Details
 
 Backend Libraries
@@ -366,12 +370,11 @@ Gradient backgrounds
 Animated cards
 Mobile-friendly layout
 Real-time progress indicators
-
 🌐 Deployment
 
 Deployed on Streamlit Cloud
 
-URL: https://neuralbishal-video-frame-extractor.streamlit.app
+URL: https://video-frame-extractor-ypuahusgncnfuzp5ekdebd.streamlit.app
 
 Deployment Process
 
@@ -384,16 +387,9 @@ git push origin main
 # 2. Streamlit Cloud auto-detects and deploys
 # 3. Wait 2-3 minutes for build
 # 4. App live at streamlit.app URL
-Environment Variables (Optional)
-
-toml
-# .streamlit/secrets.toml
-MAX_FILE_SIZE = 200
-SUPPORTED_FORMATS = ["mp4", "avi", "mov", "mkv"]
-
 🤝 Contributing
 
->>Guidelines
+Guidelines
 
 Fork the repository
 Create feature branch (git checkout -b feature/AmazingFeature)
@@ -409,7 +405,6 @@ python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 streamlit run app.py
-
 📝 License
 
 MIT License - Free to use, modify, and distribute.
@@ -422,12 +417,12 @@ Copyright (c) 2024 Bishal Majumdar
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction...
-
 👨‍💻 Author
 
 Bishal Majumdar
 
 GitHub: @NeuralBishal
+LinkedIn: Neural Bishal
 Project Link: https://github.com/NeuralBishal/video-frame-extractor
 Live Demo: https://video-frame-extractor-ypuahusgncnfuzp5ekdebd.streamlit.app
 🙏 Acknowledgments
@@ -436,19 +431,33 @@ OpenCV Team - Computer vision library
 Streamlit - Web framework
 GitHub - Version control & hosting
 Streamlit Cloud - Free deployment platform
-
 📧 Support
 
 Issues: GitHub Issues
 Discussions: GitHub Discussions
 🎯 Key Statistics
+
 Metric	Value
-Lines of Code	~500
-File Size	15KB (app.py)
+Lines of Code	~600
+File Size	20KB (app.py)
 Dependencies	4 Python packages
 Deployment Time	2-3 minutes
 Processing Speed	50-200 fps
 Max File Size	200MB
 Supported Formats	6 video formats
-
 Made with ❤️ using OpenCV & Streamlit
+
+Now with Video Player & Interactive Timeline Selection! 🎬
+
+text
+
+## Push the updated README:
+
+```bash
+# Update README.md with the new content
+# Copy the content above into README.md
+
+# Add and commit
+git add README.md
+git commit -m "Update README with video player and timeline selection features"
+git push origin main
