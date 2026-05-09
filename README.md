@@ -6,6 +6,8 @@
   </p>
   <br/>
 </div>
+
+
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://video-frame-extractor.streamlit.app)
 [![GitHub stars](https://img.shields.io/github/stars/NeuralBishal/video-frame-extractor)](https://github.com/NeuralBishal/video-frame-extractor/stargazers)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
