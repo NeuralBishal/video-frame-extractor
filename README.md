@@ -1,3 +1,7 @@
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://video-frame-extractor.streamlit.app)
+[![GitHub stars](https://img.shields.io/github/stars/NeuralBishal/video-frame-extractor)](https://github.com/NeuralBishal/video-frame-extractor/stargazers)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 📹 Video Frame Extractor Pro
 
 A powerful, production-ready web application that extracts frames from any video file or URL with customizable settings. Built with Streamlit and OpenCV, deployed on Streamlit Cloud.
