@@ -144,280 +144,290 @@ if start_time <= current_time <= end_time:
 # Selected range: 10s - 20s (300 frames)
 # N = 30 → Extracts 10 frames
 # N = 1 → Extracts all 300 frames in range
-🏗️ Technical Architecture
 
-Technology Stack
+🏗️ **Technical Architecture**
 
-Layer	Technology
-Frontend	Streamlit (HTML/CSS embedded)
-Backend	Python 3.11+
-Computer Vision	OpenCV 4.8+
-Image Processing	Pillow, NumPy
-Deployment	Streamlit Cloud
-Version Control	Git & GitHub
-Project Structure
+    Technology Stack
+    
+    Layer	Technology
+    Frontend	Streamlit (HTML/CSS embedded)
+    Backend	Python 3.11+
+    Computer Vision	OpenCV 4.8+
+    Image Processing	Pillow, NumPy
+    Deployment	Streamlit Cloud
+    Version Control	Git & GitHub
+    Project Structure
+    
+    text
+    video-frame-extractor/
+    ├── app.py              # Main application (20KB)
+    ├── requirements.txt    # Python dependencies
+    ├── packages.txt        # System dependencies
+    ├── README.md          # Documentation
+    ├── .gitignore         # Git ignore rules
+    └── runtime.txt        # Python version spec
+    Dependencies
+    
+    txt
+    streamlit>=1.28.0      # Web framework
+    opencv-python-headless  # Video processing
+    numpy>=1.24.0          # Numerical operations
+    Pillow>=10.0.0         # Image handling
 
-text
-video-frame-extractor/
-├── app.py              # Main application (20KB)
-├── requirements.txt    # Python dependencies
-├── packages.txt        # System dependencies
-├── README.md          # Documentation
-├── .gitignore         # Git ignore rules
-└── runtime.txt        # Python version spec
-Dependencies
+💻 **Installation**
 
-txt
-streamlit>=1.28.0      # Web framework
-opencv-python-headless  # Video processing
-numpy>=1.24.0          # Numerical operations
-Pillow>=10.0.0         # Image handling
-💻 Installation
+    Local Development
+    
+    bash
+    # Clone the repository
+    git clone https://github.com/NeuralBishal/video-frame-extractor.git
+    cd video-frame-extractor
+    
+    # Create virtual environment (optional)
+    python -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
+    
+    # Install dependencies
+    pip install -r requirements.txt
+    
+    # Run the app
+    streamlit run app.py
+    
+    # Open browser to http://localhost:8501
+    Docker (Optional)
+    
+    bash
+    # Build image
+    docker build -t video-frame-extractor .
+    
+    # Run container
+    docker run -p 8501:8501 video-frame-extractor
+    
+    # Access at http://localhost:8501
 
-Local Development
+📚 **Usage Guide**
 
-bash
-# Clone the repository
-git clone https://github.com/NeuralBishal/video-frame-extractor.git
-cd video-frame-extractor
+    Step-by-Step Tutorial
+    
+    Step 1: Input Video
+    
+    Choose "Upload Video File" to upload from your computer
+    OR select "Video URL" and paste a direct video link
+    Step 2: Watch & Select
+    
+    Watch your video in the built-in player
+    Use the Start Time and End Time sliders to select your range
+    Watch the visual timeline bar update in real-time
+    Step 3: Configure Settings
+    
+    Adjust extraction parameters in the sidebar
+    See estimated frames update automatically
+    Step 4: Extract Frames
+    
+    Click "START EXTRACTION"
+    Watch real-time progress and frame previews
+    Step 5: Download
+    
+    Click "Download Frames" to get ZIP file
+    All frames saved as frame_000001.jpg, etc.
 
-# Create virtual environment (optional)
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+🎛️ **Settings Explanation**
 
-# Install dependencies
-pip install -r requirements.txt
+    Basic Settings
+    
+    Setting	Range	Default	Description
+    Extract every N frame	1-120	30	1 = all frames, 30 = 1 frame/second (30fps)
+    JPEG Quality	30-100	85	Higher = better quality, larger file size
+    Resize Options
+    
+    Setting	Description	Use Case
+    Resize Frames	Enable/disable scaling	When smaller files needed
+    Width	Target width in pixels	1280 for HD
+    Height	Target height in pixels	720 for HD
+    Timeline Selection (New!)
+    
+    Setting	Description	Example
+    Start Time	Where to begin extraction	10.5 seconds
+    End Time	Where to stop extraction	25.0 seconds
+    Advanced Options
+    
+    Setting	Description	Example
+    Max Frames	Limit total extracted	100 (prevents overload)
+    Calculation Formulas
+    
+    text
+    Frames in Range = (End Time - Start Time) × FPS
+    Frames Extracted = Frames in Range ÷ Frame Interval
+    
+    Example:
+    Video: 30fps, Range: 10s-20s (10 seconds)
+    Frames in range: 300 frames
+    Frame interval: 30
+    Frames extracted: 10 frames
 
-# Run the app
-streamlit run app.py
+🎯 **Use Cases**
 
-# Open browser to http://localhost:8501
-Docker (Optional)
+    1. Security Footage Analysis
+    
+    yaml
+    Timeline: Select suspicious time range
+    Interval: 300 (1 frame every 10 seconds)
+    Quality: 70
+    Resize: 640×360
+    Result: Compact review of relevant footage
+    2. Sports Highlights
+    
+    yaml
+    Timeline: Select goal/play time range
+    Interval: 1 (every frame)
+    Result: Everything from key 45-second play
+    3. Machine Learning Dataset
+    
+    yaml
+    Timeline: Full video or specific scenes
+    Interval: 30
+    Resize: 224×224
+    Quality: 95
+    Max frames: 5000
+    Result: Standardized training images
+    4. Thumbnail Generation
+    
+    yaml
+    Timeline: Best moments in video
+    Interval: 600 (1 frame per 20 seconds)
+    Resize: 320×180
+    Quality: 80
+    Result: Small preview thumbnails
 
-bash
-# Build image
-docker build -t video-frame-extractor .
+📊** Performance Metrics**
 
-# Run container
-docker run -p 8501:8501 video-frame-extractor
+    Processing Speed
+    
+    Resolution	FPS (processing)	Time for 30s video
+    480p (854×480)	150-200 fps	~0.15 sec
+    720p (1280×720)	80-120 fps	~0.30 sec
+    1080p (1920×1080)	40-60 fps	~0.60 sec
+    4K (3840×2160)	15-25 fps	~1.50 sec
+    File Size Estimates
+    
+    Frames	No Resize (800×450)	50% Resize (400×225)
+    100	~10 MB	~2.5 MB
+    1000	~100 MB	~25 MB
+    10000	~1 GB	~250 MB
+    Limits
+    
+    Max file upload: 200MB (Streamlit Cloud limit)
+    Max frames per request: 10,000 (configurable)
+    Processing timeout: 5 minutes (Streamlit Cloud)
+    Simultaneous users: Unlimited (but queue-based)
 
-# Access at http://localhost:8501
-📚 Usage Guide
+⚠️ **Limitations**
+    
+    Current Constraints
+    
+    Limitation	Impact	Workaround
+    200MB file size	Can't process long videos	Use URL input for larger videos
+    No database	No saved history	User must track downloads
+    Stateless	No resume capability	Process in segments
+    Single video at a time	No batch processing	Process sequentially
+    No GPU acceleration	CPU-only processing	Use lower resolutions
+    Known Issues
+    
+    Large videos (>200MB): Must use URL method
+    Exotic codecs: May fail to open
+    Audio extraction: Not supported (frames only)
+    Variable framerate: Estimate may be inaccurate
 
-Step-by-Step Tutorial
+🔮 **Future Enhancements**
 
-Step 1: Input Video
+    Planned Features
+    
+    PNG format support (lossless extraction)
+    Batch processing (multiple videos)
+    Custom output naming patterns
+    Watermark overlay on frames
+    Scene detection (extract only on changes)
+    Facial recognition in frames
+    Keyboard shortcuts for timeline navigation
+    Frame thumbnails on timeline
+    Under Consideration
+    
+    User accounts with Supabase
+    Extraction history (database)
+    Cloud storage integration (S3, Google Drive)
+    API endpoint for programmatic access
+    Mobile app (React Native)
 
-Choose "Upload Video File" to upload from your computer
-OR select "Video URL" and paste a direct video link
-Step 2: Watch & Select
+🛠️ **Tech Stack Details**
 
-Watch your video in the built-in player
-Use the Start Time and End Time sliders to select your range
-Watch the visual timeline bar update in real-time
-Step 3: Configure Settings
+      Backend Libraries
+    
+      python
+      # Core dependencies
+      streamlit==1.28.1      # Web framework & UI
+      opencv-python-headless # Video I/O & processing
+      numpy==1.24.3         # Array operations
+      Pillow==10.0.1        # Image encoding
+      
+      # System dependencies (packages.txt)
+      libgl1-mesa-glx       # OpenGL libraries
+      libglib2.0-0          # GLib libraries
+      Frontend (Embedded HTML/CSS)
+      
+      Custom responsive design
+      Gradient backgrounds
+      Animated cards
+      Mobile-friendly layout
+      Real-time progress indicators
 
-Adjust extraction parameters in the sidebar
-See estimated frames update automatically
-Step 4: Extract Frames
+🌐 **Deployment**
 
-Click "START EXTRACTION"
-Watch real-time progress and frame previews
-Step 5: Download
+    Deployed on Streamlit Cloud
+    
+    URL: https://video-frame-extractor-ypuahusgncnfuzp5ekdebd.streamlit.app
+    
+    Deployment Process
+    
+    bash
+    # 1. Push to GitHub
+    git add .
+    git commit -m "Deploy video frame extractor"
+    git push origin main
+    
+    # 2. Streamlit Cloud auto-detects and deploys
+    # 3. Wait 2-3 minutes for build
+    # 4. App live at streamlit.app URL
 
-Click "Download Frames" to get ZIP file
-All frames saved as frame_000001.jpg, etc.
-🎛️ Settings Explanation
+🤝 **Contributing**
 
-Basic Settings
+    Guidelines
+    
+    Fork the repository
+    Create feature branch (git checkout -b feature/AmazingFeature)
+    Commit changes (git commit -m 'Add AmazingFeature')
+    Push to branch (git push origin feature/AmazingFeature)
+    Open Pull Request
+    Development Setup
+    
+    bash
+    git clone https://github.com/NeuralBishal/video-frame-extractor.git
+    cd video-frame-extractor
+    python -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+    streamlit run app.py
 
-Setting	Range	Default	Description
-Extract every N frame	1-120	30	1 = all frames, 30 = 1 frame/second (30fps)
-JPEG Quality	30-100	85	Higher = better quality, larger file size
-Resize Options
-
-Setting	Description	Use Case
-Resize Frames	Enable/disable scaling	When smaller files needed
-Width	Target width in pixels	1280 for HD
-Height	Target height in pixels	720 for HD
-Timeline Selection (New!)
-
-Setting	Description	Example
-Start Time	Where to begin extraction	10.5 seconds
-End Time	Where to stop extraction	25.0 seconds
-Advanced Options
-
-Setting	Description	Example
-Max Frames	Limit total extracted	100 (prevents overload)
-Calculation Formulas
-
-text
-Frames in Range = (End Time - Start Time) × FPS
-Frames Extracted = Frames in Range ÷ Frame Interval
-
-Example:
-Video: 30fps, Range: 10s-20s (10 seconds)
-Frames in range: 300 frames
-Frame interval: 30
-Frames extracted: 10 frames
-🎯 Use Cases
-
-1. Security Footage Analysis
-
-yaml
-Timeline: Select suspicious time range
-Interval: 300 (1 frame every 10 seconds)
-Quality: 70
-Resize: 640×360
-Result: Compact review of relevant footage
-2. Sports Highlights
-
-yaml
-Timeline: Select goal/play time range
-Interval: 1 (every frame)
-Result: Everything from key 45-second play
-3. Machine Learning Dataset
-
-yaml
-Timeline: Full video or specific scenes
-Interval: 30
-Resize: 224×224
-Quality: 95
-Max frames: 5000
-Result: Standardized training images
-4. Thumbnail Generation
-
-yaml
-Timeline: Best moments in video
-Interval: 600 (1 frame per 20 seconds)
-Resize: 320×180
-Quality: 80
-Result: Small preview thumbnails
-📊 Performance Metrics
-
-Processing Speed
-
-Resolution	FPS (processing)	Time for 30s video
-480p (854×480)	150-200 fps	~0.15 sec
-720p (1280×720)	80-120 fps	~0.30 sec
-1080p (1920×1080)	40-60 fps	~0.60 sec
-4K (3840×2160)	15-25 fps	~1.50 sec
-File Size Estimates
-
-Frames	No Resize (800×450)	50% Resize (400×225)
-100	~10 MB	~2.5 MB
-1000	~100 MB	~25 MB
-10000	~1 GB	~250 MB
-Limits
-
-Max file upload: 200MB (Streamlit Cloud limit)
-Max frames per request: 10,000 (configurable)
-Processing timeout: 5 minutes (Streamlit Cloud)
-Simultaneous users: Unlimited (but queue-based)
-⚠️ Limitations
-
-Current Constraints
-
-Limitation	Impact	Workaround
-200MB file size	Can't process long videos	Use URL input for larger videos
-No database	No saved history	User must track downloads
-Stateless	No resume capability	Process in segments
-Single video at a time	No batch processing	Process sequentially
-No GPU acceleration	CPU-only processing	Use lower resolutions
-Known Issues
-
-Large videos (>200MB): Must use URL method
-Exotic codecs: May fail to open
-Audio extraction: Not supported (frames only)
-Variable framerate: Estimate may be inaccurate
-🔮 Future Enhancements
-
-Planned Features
-
-PNG format support (lossless extraction)
-Batch processing (multiple videos)
-Custom output naming patterns
-Watermark overlay on frames
-Scene detection (extract only on changes)
-Facial recognition in frames
-Keyboard shortcuts for timeline navigation
-Frame thumbnails on timeline
-Under Consideration
-
-User accounts with Supabase
-Extraction history (database)
-Cloud storage integration (S3, Google Drive)
-API endpoint for programmatic access
-Mobile app (React Native)
-🛠️ Tech Stack Details
-
-Backend Libraries
-
-python
-# Core dependencies
-streamlit==1.28.1      # Web framework & UI
-opencv-python-headless # Video I/O & processing
-numpy==1.24.3         # Array operations
-Pillow==10.0.1        # Image encoding
-
-# System dependencies (packages.txt)
-libgl1-mesa-glx       # OpenGL libraries
-libglib2.0-0          # GLib libraries
-Frontend (Embedded HTML/CSS)
-
-Custom responsive design
-Gradient backgrounds
-Animated cards
-Mobile-friendly layout
-Real-time progress indicators
-🌐 Deployment
-
-Deployed on Streamlit Cloud
-
-URL: https://video-frame-extractor-ypuahusgncnfuzp5ekdebd.streamlit.app
-
-Deployment Process
-
-bash
-# 1. Push to GitHub
-git add .
-git commit -m "Deploy video frame extractor"
-git push origin main
-
-# 2. Streamlit Cloud auto-detects and deploys
-# 3. Wait 2-3 minutes for build
-# 4. App live at streamlit.app URL
-🤝 Contributing
-
-Guidelines
-
-Fork the repository
-Create feature branch (git checkout -b feature/AmazingFeature)
-Commit changes (git commit -m 'Add AmazingFeature')
-Push to branch (git push origin feature/AmazingFeature)
-Open Pull Request
-Development Setup
-
-bash
-git clone https://github.com/NeuralBishal/video-frame-extractor.git
-cd video-frame-extractor
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-streamlit run app.py
-📝 License
+📝 **License**
 
 MIT License - Free to use, modify, and distribute.
 
-text
 MIT License
-
 Copyright (c) 2024 Bishal Majumdar
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction...
-👨‍💻 Author
+
+👨‍💻 **Author**
 
 Bishal Majumdar
 
@@ -425,17 +435,20 @@ GitHub: @NeuralBishal
 LinkedIn: Neural Bishal
 Project Link: https://github.com/NeuralBishal/video-frame-extractor
 Live Demo: https://video-frame-extractor-ypuahusgncnfuzp5ekdebd.streamlit.app
-🙏 Acknowledgments
+
+🙏 **Acknowledgments**
 
 OpenCV Team - Computer vision library
 Streamlit - Web framework
 GitHub - Version control & hosting
 Streamlit Cloud - Free deployment platform
+
 📧 Support
 
 Issues: GitHub Issues
 Discussions: GitHub Discussions
-🎯 Key Statistics
+
+🎯 **Key Statistics**
 
 Metric	Value
 Lines of Code	~600
@@ -447,17 +460,3 @@ Max File Size	200MB
 Supported Formats	6 video formats
 Made with ❤️ using OpenCV & Streamlit
 
-Now with Video Player & Interactive Timeline Selection! 🎬
-
-text
-
-## Push the updated README:
-
-```bash
-# Update README.md with the new content
-# Copy the content above into README.md
-
-# Add and commit
-git add README.md
-git commit -m "Update README with video player and timeline selection features"
-git push origin main
