@@ -261,7 +261,7 @@ else:  # Video URL
     if video_url:
         col1, col2 = st.columns([3, 1])
         with col2:
-            download_btn = st.button("📥 Fetch Video", use_container_width=True)
+            download_btn = st.button("📥 Fetch Video", width="stretch")
         
         if download_btn:
             with st.spinner("Downloading video from URL..."):
