@@ -23,6 +23,8 @@ https://video-frame-extractor-ypuahusgncnfuzp5ekdebd.streamlit.app
 
 If you find this project useful, please give it a ⭐ on GitHub!
 
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/neural-bishal-01627136a/)
+
 📸 Screenshots
 <img width="1680" height="1050" alt="Screenshot 2026-05-09 at 12 03 37 PM" src="https://github.com/user-attachments/assets/6dd60dc0-37d0-48fa-bf9d-c152683ebc88" />
 <img width="1680" height="1050" alt="Screenshot 2026-05-09 at 12 06 25 PM" src="https://github.com/user-attachments/assets/7435a7f2-c102-408e-b95e-03e2618b97e3" />
