@@ -1,4 +1,10 @@
-streamlit>=1.25.0
-opencv-python-headless>=4.7.0
-numpy>=1.21.0
-Pillow>=9.0.0
+streamlit>=1.28.0
+opencv-python-headless>=4.8.0
+numpy>=1.24.0
+pillow>=10.0.0
+SpeechRecognition>=3.10.0
+openai-whisper>=20231117
+googletrans==4.0.0rc1
+ffmpeg-python>=0.2.0
+pydub>=0.25.1
+pyaudio>=0.2.11

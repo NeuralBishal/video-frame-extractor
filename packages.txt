@@ -1,0 +1,4 @@
+ffmpeg
+libavcodec-extra
+portaudio19-dev
+python3-dev
