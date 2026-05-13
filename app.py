@@ -13,7 +13,7 @@ import whisper
 import subprocess
 import threading
 import queue
-from googletrans import Translator
+from deep_translator import GoogleTranslator
 import numpy as np
 import wave
 import pyaudio
@@ -313,7 +313,7 @@ else:  # Video URL
 # Initialize global variables for real-time processing
 transcription_queue = queue.Queue()
 subtitles_history = []
-translator = Translator()
+translator = GoogleTranslator(source='auto', target='en')
 
 class RealTimeSubtitleGenerator:
     def __init__(self, model_size="base", target_lang='en'):
