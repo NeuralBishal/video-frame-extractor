@@ -16,6 +16,7 @@ import queue
 from deep_translator import GoogleTranslator
 import numpy as np
 import wave
+import ffmpeg
 
 def extract_audio_from_video(video_path, audio_path="temp_audio.wav"):
     """Extract audio from video file"""
