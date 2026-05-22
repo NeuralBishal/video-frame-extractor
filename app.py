@@ -16,7 +16,6 @@ import queue
 from deep_translator import GoogleTranslator
 import numpy as np
 import wave
-import pyaudio
 
 def extract_audio_from_video(video_path, audio_path="temp_audio.wav"):
     """Extract audio from video file"""
@@ -41,11 +40,7 @@ def format_time(seconds):
     millis = int((seconds % 1) * 1000)
     return f"{hours:02d}:{minutes:02d}:{secs:02d},{millis:03d}"
 
-st.set_page_config(
-    page_title="Video Frame Extractor",
-    page_icon="🎬",
-    layout="wide"
-)
+
 
 # Custom HTML/CSS for better UI
 st.markdown("""
@@ -511,27 +506,95 @@ if video_path and os.path.exists(video_path):
                 
                 subtitle_history_placeholder.text(history_text)
         
-        if st.button("🎬 Start Live Subtitles", width="stretch"):
-            with st.spinner("Initializing real-time subtitle generator..."):
+        # This button should be HERE - inside if enable_real_time block
+        if st.button("🎬 Generate Subtitles", width="stretch"):
+            # Check if ffmpeg is available
+            try:
+                subprocess.run(['ffmpeg', '-version'], capture_output=True, check=True)
+            except:
+                st.error("FFmpeg is not installed. Please install ffmpeg to extract audio.")
+                st.stop()
+            
+            with st.spinner("Processing audio and generating subtitles..."):
                 try:
-                    st.info("🎤 Listening to audio and generating subtitles...")
+                    # Extract audio from video
+                    audio_path = extract_audio_from_video(video_path)
                     
-                    sample_subtitles = [
-                        "Welcome to this lecture on computer vision...",
-                        "Today we'll learn about image processing techniques...",
-                        "The first concept we need to understand is...",
-                        "This is how OpenCV processes video frames...",
-                        "Let me explain this with a practical example..."
-                    ]
-                    
-                    for sub in sample_subtitles:
-                        update_subtitle(sub)
-                        time.sleep(3)
-                    
-                    st.success("✅ Live subtitles completed!")
-                    
+                    if audio_path and os.path.exists(audio_path):
+                        # Load Whisper model
+                        model = whisper.load_model("base")
+                        
+                        # Transcribe
+                        result = model.transcribe(audio_path)
+                        
+                        # Collect segments and display subtitles
+                        segments = []
+                        for segment in result["segments"]:
+                            text = segment["text"]
+                            
+                            # Simplify if needed
+                            if subtitle_language == "Plain English (Simplified)":
+                                text = subtitle_generator.simplify_english(text)
+                            
+                            segments.append({
+                                'start': segment['start'],
+                                'end': segment['end'],
+                                'text': text
+                            })
+                            
+                            update_subtitle(text)
+                            time.sleep(0.1)  # Small delay for visual effect
+                        
+                        # Create SRT file for download
+                        srt_path = "subtitles.srt"
+                        with open(srt_path, 'w', encoding='utf-8') as f:
+                            for i, seg in enumerate(segments, 1):
+                                start = format_time(seg['start'])
+                                end = format_time(seg['end'])
+                                text = seg['text']
+                                f.write(f"{i}\n{start} --> {end}\n{text}\n\n")
+                        
+                        # Create plain text file
+                        txt_path = "transcript.txt"
+                        with open(txt_path, 'w', encoding='utf-8') as f:
+                            for seg in segments:
+                                f.write(f"{seg['text']}\n")
+                        
+                        # Offer downloads
+                        col1, col2 = st.columns(2)
+                        
+                        with col1:
+                            with open(srt_path, 'rb') as f:
+                                st.download_button(
+                                    label="📥 Download Subtitles (.srt)",
+                                    data=f,
+                                    file_name="subtitles.srt",
+                                    mime="text/plain",
+                                    width="stretch"
+                                )
+                        
+                        with col2:
+                            with open(txt_path, 'rb') as f:
+                                st.download_button(
+                                    label="📥 Download Transcript (.txt)",
+                                    data=f,
+                                    file_name="transcript.txt",
+                                    mime="text/plain",
+                                    width="stretch"
+                                )
+                        
+                        st.info("💡 Tip: Use VLC or any video player to add the .srt subtitle file while watching the video.")
+                        
+                        # Cleanup
+                        os.unlink(audio_path)
+                        os.unlink(srt_path)
+                        os.unlink(txt_path)
+                        st.success(f"✅ Generated {len(segments)} subtitle segments!")
+                    else:
+                        st.error("Failed to extract audio from video")
+                        
                 except Exception as e:
-                    st.error(f"Error in real-time processing: {str(e)}")
+                    st.error(f"Error: {str(e)}")
     
     # Timeline selection sliders
     st.markdown("### 📍 Select Time Range")
