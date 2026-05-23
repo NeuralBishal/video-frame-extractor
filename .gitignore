@@ -40,3 +40,4 @@ frames_*.zip
 
 # Logs
 *.log
+Dockerfile
