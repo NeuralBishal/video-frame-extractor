@@ -16,7 +16,7 @@ import queue
 from deep_translator import GoogleTranslator
 import numpy as np
 import wave
-import ffmpeg
+
 
 def extract_audio_from_video(video_path, audio_path="temp_audio.wav"):
     """Extract audio from video file"""
@@ -321,13 +321,13 @@ class RealTimeSubtitleGenerator:
     def extract_audio_stream(self, video_path):
         """Extract audio stream from video for real-time processing"""
         try:
-            import ffmpeg
-            process = (
-                ffmpeg
-                .input(video_path)
-                .output('pipe:', format='wav', acodec='pcm_s16le', ar=16000, ac=1)
-                .run_async(pipe_stdout=True, pipe_stderr=True)
-            )
+            cmd = [
+                'ffmpeg', '-i', video_path,
+                '-f', 'wav', '-acodec', 'pcm_s16le',
+                '-ar', '16000', '-ac', '1',
+                'pipe:1'
+            ]
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             return process
         except Exception as e:
             st.error(f"Audio stream extraction failed: {str(e)}")
