@@ -516,14 +516,14 @@ if video_path and os.path.exists(video_path):
                 st.error("FFmpeg is not installed. Please install ffmpeg to extract audio.")
                 st.stop()
             
-            with st.spinner("Processing audio and generating subtitles..."):
+            with st.spinner("Processing audio and generating subtitles (this may take 30-60 seconds)..."):
                 try:
                     # Extract audio from video
                     audio_path = extract_audio_from_video(video_path)
                     
                     if audio_path and os.path.exists(audio_path):
-                        # Load Whisper model
-                        model = whisper.load_model("base")
+                        # Load Whisper model (use tiny for faster processing on free tier)
+                        model = whisper.load_model("tiny")
                         
                         # Transcribe
                         result = model.transcribe(audio_path)
