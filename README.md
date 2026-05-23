@@ -517,7 +517,7 @@ OpenCV Team - Computer vision library
 Streamlit - Web framework
 FFmpeg - Audio processing
 GitHub - Version control & hosting
-Streamlit Cloud - Free deployment platform
+#Streamlit Cloud - Free deployment platform
 📧 Support
 
 Issues: GitHub Issues
