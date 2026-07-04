@@ -1,61 +1,37 @@
+"""
+Video Frame Extractor Pro - Main Application
+"""
 import streamlit as st
-import cv2
-import tempfile
 import os
-import zipfile
-import urllib.request
-from urllib.parse import urlparse
-import time
-import base64
-from pathlib import Path
-import speech_recognition as sr
+import tempfile
+import json
 import whisper
 import subprocess
-import threading
-import queue
-from deep_translator import GoogleTranslator
-import numpy as np
-import wave
+import time
+from src.utils import *
+from src.audio_processor import *
+from src.video_processor import *
+from src.text_processor import *
+from src.document_generator import *
+from ui.main_ui import *
+from ui.sidebar import render_sidebar
+from ui.components import *
 
+# Page configuration
+st.set_page_config(
+    page_title="Video Frame Extractor Pro",
+    page_icon="🎬",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-def extract_audio_from_video(video_path, audio_path="temp_audio.wav"):
-    """Extract audio from video file"""
-    try:
-        cmd = [
-            'ffmpeg', '-i', video_path,
-            '-ac', '1', '-ar', '16000',
-            '-vn', '-y',
-            audio_path
-        ]
-        subprocess.run(cmd, capture_output=True, check=True)
-        return audio_path
-    except Exception as e:
-        st.error(f"Audio extraction failed: {str(e)}")
-        return None
-
-def format_time(seconds):
-    """Convert seconds to SRT time format"""
-    hours = int(seconds // 3600)
-    minutes = int((seconds % 3600) // 60)
-    secs = int(seconds % 60)
-    millis = int((seconds % 1) * 1000)
-    return f"{hours:02d}:{minutes:02d}:{secs:02d},{millis:03d}"
-
-
-
-# Custom HTML/CSS for better UI
-st.markdown("""
-<!DOCTYPE html>
-<html>
-<head>
+# Load custom CSS
+def load_css():
+    st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         .main-header {
             text-align: center;
@@ -66,15 +42,8 @@ st.markdown("""
             margin-bottom: 2rem;
         }
         
-        .main-header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .main-header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
+        .main-header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .main-header p { font-size: 1.1rem; opacity: 0.9; }
         
         .feature-card {
             background: white;
@@ -90,22 +59,9 @@ st.markdown("""
             box-shadow: 0 5px 20px rgba(0,0,0,0.15);
         }
         
-        .feature-icon {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-        }
-        
-        .feature-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #333;
-        }
-        
-        .feature-desc {
-            color: #666;
-            line-height: 1.5;
-        }
+        .feature-icon { font-size: 2rem; margin-bottom: 1rem; }
+        .feature-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem; color: #333; }
+        .feature-desc { color: #666; line-height: 1.5; }
         
         .success-badge {
             background: #d4edda;
@@ -123,669 +79,566 @@ st.markdown("""
             border-radius: 5px;
         }
         
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin: 1rem 0;
-        }
-        
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .subtitle-box {
+            background: rgba(0,0,0,0.85);
             color: white;
-            padding: 1rem;
+            padding: 20px;
             border-radius: 10px;
             text-align: center;
-        }
-        
-        .stat-number {
-            font-size: 1.8rem;
-            font-weight: bold;
-        }
-        
-        .stat-label {
-            font-size: 0.9rem;
-            opacity: 0.9;
-            margin-top: 0.5rem;
+            font-size: 1.2rem;
+            margin: 10px 0;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         @media (max-width: 768px) {
-            .main-header h1 {
-                font-size: 1.8rem;
-            }
-            .stats-container {
-                grid-template-columns: 1fr;
-            }
+            .main-header h1 { font-size: 1.8rem; }
         }
     </style>
-</head>
-</html>
-""", unsafe_allow_html=True)
-
-# Header
-st.markdown("""
-<div class="main-header">
-    <h1>🎬 Video Frame Extractor Pro</h1>
-    <p>Extract high-quality frames from any video in seconds</p>
-</div>
-""", unsafe_allow_html=True)
-
-# Features section
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    st.markdown("""
-    <div class="feature-card">
-        <div class="feature-icon">📤</div>
-        <div class="feature-title">Easy Upload</div>
-        <div class="feature-desc">Upload any video file or provide URL</div>
-    </div>
     """, unsafe_allow_html=True)
 
-with col2:
-    st.markdown("""
-    <div class="feature-card">
-        <div class="feature-icon">⚙️</div>
-        <div class="feature-title">Customizable</div>
-        <div class="feature-desc">Adjust interval, quality & resize options</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col3:
-    st.markdown("""
-    <div class="feature-card">
-        <div class="feature-icon">📥</div>
-        <div class="feature-title">Bulk Download</div>
-        <div class="feature-desc">Download all frames as ZIP archive</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col4:
-    st.markdown("""
-    <div class="feature-card">
-        <div class="feature-icon">⚡</div>
-        <div class="feature-title">Fast Processing</div>
-        <div class="feature-desc">Optimized extraction with progress tracking</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-st.markdown("---")
-
-# Sidebar for settings
-with st.sidebar:
-    st.markdown("## ⚙️ Settings")
+def process_video_to_text(video_path, video_filename, settings):
+    """Main processing function for video to text & audio"""
+    # Extract settings
+    target_lang_code = settings['target_lang_code']
+    target_lang_name = settings['target_lang_name']
+    source_lang = settings['source_lang']
+    audio_speed = settings['audio_speed']
+    simplify_text_flag = settings.get('simplify_text', True)
+    translate_to_target = settings.get('translate_to_target', True)
+    generate_translated_audio = settings.get('generate_translated_audio', True)
+    generate_pdf_flag = settings.get('generate_pdf', True)
+    generate_pptx_flag = settings.get('generate_pptx', False)
     
-    st.markdown("### Extraction Settings")
-    frame_interval = st.slider(
-        "Extract every N frame",
-        min_value=1,
-        max_value=120,
-        value=30,
-        help="1 = all frames, 30 = 1 frame/second (30fps)"
-    )
+    # Check ffmpeg
+    if not check_ffmpeg():
+        st.error("FFmpeg is not installed. Please install ffmpeg to extract audio.")
+        return None
     
-    quality = st.slider(
-        "JPEG Quality",
-        min_value=30,
-        max_value=100,
-        value=85,
-        help="Higher quality = larger file size"
-    )
-    
-    st.markdown("### Resize Options")
-    resize_frames = st.checkbox("Resize frames", value=False)
-    if resize_frames:
-        col1, col2 = st.columns(2)
-        with col1:
-            resize_width = st.number_input("Width", min_value=100, max_value=3840, value=1280)
-        with col2:
-            resize_height = st.number_input("Height", min_value=100, max_value=2160, value=720)
-    
-    st.markdown("### Advanced Options")
-    with st.expander("Show advanced options"):
-        max_frames = st.number_input(
-            "Max frames (0=unlimited)",
-            min_value=0,
-            max_value=10000,
-            value=0,
-            help="Limit total frames extracted"
-        )
-
-# Main content
-st.markdown("## 📁 Input Video")
-
-# Two input methods
-input_method = st.radio(
-    "Select input method:",
-    ["📤 Upload Video File", "🔗 Video URL"],
-    horizontal=True
-)
-
-video_path = None
-video_filename = None
-
-if input_method == "📤 Upload Video File":
-    uploaded_file = st.file_uploader(
-        "Choose a video file",
-        type=['mp4', 'avi', 'mov', 'mkv', 'webm', 'flv', 'm4v'],
-        help="Supported formats: MP4, AVI, MOV, MKV, WEBM, FLV"
-    )
-    
-    if uploaded_file:
-        with st.spinner("Loading video..."):
-            tfile = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4')
-            tfile.write(uploaded_file.read())
-            video_path = tfile.name
-            video_filename = uploaded_file.name
-        st.markdown(f'<div class="success-badge">✅ Loaded: {uploaded_file.name}</div>', unsafe_allow_html=True)
-
-else:  # Video URL
-    video_url = st.text_input(
-        "Enter video URL",
-        placeholder="https://example.com/video.mp4",
-        help="Direct link to video file"
-    )
-    
-    if video_url:
-        col1, col2 = st.columns([3, 1])
-        with col2:
-            download_btn = st.button("📥 Fetch Video", width="stretch")
+    try:
+        # Extract audio
+        audio_path = extract_audio_from_video(video_path)
         
-        if download_btn:
-            with st.spinner("Downloading video from URL..."):
-                try:
-                    parsed_url = urlparse(video_url)
-                    if not parsed_url.scheme in ['http', 'https']:
-                        st.error("Please enter a valid HTTP/HTTPS URL")
-                    else:
-                        video_path = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4').name
-                        urllib.request.urlretrieve(video_url, video_path)
-                        video_filename = os.path.basename(parsed_url.path) or "downloaded_video.mp4"
-                        st.markdown('<div class="success-badge">✅ Video downloaded successfully!</div>', unsafe_allow_html=True)
-                except Exception as e:
-                    st.error(f"Failed to download: {str(e)}")
-                    video_path = None
-
-# Initialize global variables for real-time processing
-transcription_queue = queue.Queue()
-subtitles_history = []
-translator = GoogleTranslator(source='auto', target='en')
-
-class RealTimeSubtitleGenerator:
-    def __init__(self, model_size="base", target_lang='en'):
-        self.model = whisper.load_model(model_size)
-        self.target_lang = target_lang
-        self.is_running = False
-        self.audio_queue = queue.Queue()
-        
-    def extract_audio_stream(self, video_path):
-        """Extract audio stream from video for real-time processing"""
-        try:
-            cmd = [
-                'ffmpeg', '-i', video_path,
-                '-f', 'wav', '-acodec', 'pcm_s16le',
-                '-ar', '16000', '-ac', '1',
-                'pipe:1'
-            ]
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            return process
-        except Exception as e:
-            st.error(f"Audio stream extraction failed: {str(e)}")
+        if not audio_path or not os.path.exists(audio_path):
+            st.error("Failed to extract audio from video")
             return None
-    
-    def process_audio_chunk(self, audio_chunk):
-        """Process a chunk of audio and return transcribed text"""
-        try:
-            temp_audio = "temp_chunk.wav"
-            with wave.open(temp_audio, 'wb') as wf:
-                wf.setnchannels(1)
-                wf.setsampwidth(2)
-                wf.setframerate(16000)
-                wf.writeframes(audio_chunk)
+        
+        # Load Whisper model
+        model = whisper.load_model("base")
+        
+        # Transcribe
+        progress_text = st.empty()
+        progress_text.text("🔄 Transcribing audio...")
+        
+        result = model.transcribe(audio_path)
+        segments = result["segments"]
+        full_text = result["text"]
+        
+        progress_text.text("📊 Processing content...")
+        
+        # Simplify if needed
+        if simplify_text_flag:
+            full_text = simplify_english(full_text)
+            segments = simplify_segments(segments)
+        
+        # Store original
+        original_text = full_text
+        original_segments = segments.copy()
+        
+        # Translate if requested
+        translated_text = None
+        translated_segments = None
+        
+        if translate_to_target and target_lang_code != 'en':
+            progress_text.text(f"🌐 Translating to {target_lang_name}...")
+            translated_text = translate_text(full_text, target_lang_code)
+            translated_segments = translate_segments(segments, target_lang_code)
+            final_text = translated_text
+            final_segments = translated_segments
+        else:
+            final_text = full_text
+            final_segments = segments
+        
+        # Structure content
+        progress_text.text("📝 Structuring content for documents...")
+        structured = structure_transcript(final_text, final_segments)
+        structured['title'] = f"Transcript: {os.path.splitext(video_filename)[0]}"
+        
+        # Generate SRT files
+        srt_original_path = "subtitles_original.srt"
+        with open(srt_original_path, 'w', encoding='utf-8') as f:
+            for i, seg in enumerate(original_segments, 1):
+                start = format_time(seg['start'])
+                end = format_time(seg['end'])
+                text = seg['text']
+                f.write(f"{i}\n{start} --> {end}\n{text}\n\n")
+        
+        srt_translated_path = None
+        if translate_to_target and target_lang_code != 'en' and translated_segments:
+            srt_translated_path = f"subtitles_{target_lang_code}.srt"
+            with open(srt_translated_path, 'w', encoding='utf-8') as f:
+                for i, seg in enumerate(translated_segments, 1):
+                    start = format_time(seg['start'])
+                    end = format_time(seg['end'])
+                    text = seg['text']
+                    f.write(f"{i}\n{start} --> {end}\n{text}\n\n")
+        
+        # Generate TXT file
+        txt_path = "transcript.txt"
+        with open(txt_path, 'w', encoding='utf-8') as f:
+            f.write(final_text)
+        
+        # Generate PDF
+        pdf_path = None
+        if generate_pdf_flag:
+            progress_text.text("📄 Generating PDF...")
+            pdf_path = generate_pdf(structured, "transcript.pdf")
+        
+        # Generate PPTX
+        pptx_path = None
+        if generate_pptx_flag:
+            progress_text.text("📊 Generating PPTX...")
+            pptx_path = generate_pptx(structured, "transcript.pptx")
+        
+        # Generate Audio - CORRECTED FOR 3 LANGUAGES
+        audio_paths = {}
+        
+        if generate_translated_audio:
+            # Generate translated audio
+            if translate_to_target and target_lang_code != 'en':
+                progress_text.text(f"🎵 Generating audio in {target_lang_name}...")
+                
+                # Use language-specific audio generation
+                audio_paths['translated'] = generate_audio_by_language(
+                    translated_text,
+                    f"transcript_audio_{target_lang_code}.mp3",
+                    target_lang_code
+                )
+                
+                # If fails, try with English
+                if not audio_paths['translated']:
+                    st.warning(f"Audio in {target_lang_name} failed. Trying English...")
+                    audio_paths['translated'] = generate_english_audio(
+                        translated_text,
+                        f"transcript_audio_{target_lang_code}_en.mp3"
+                    )
             
-            result = self.model.transcribe(temp_audio)
-            text = result["text"].strip()
+            # Generate original audio (English)
+            progress_text.text("🎵 Generating audio in English...")
+            audio_paths['original'] = generate_english_audio(
+                original_text,
+                "transcript_audio_en.mp3"
+            )
             
-            if self.target_lang != 'en' or self.target_lang == 'en':
-                text = self.simplify_english(text)
-            
-            os.unlink(temp_audio)
-            return text
-        except Exception as e:
-            return ""
-    
-    def simplify_english(self, text):
-        """Simplify complex English to plain language"""
-        replacements = {
-            'utilize': 'use',
-            'demonstrate': 'show',
-            'implement': 'do',
-            'consequently': 'so',
-            'nevertheless': 'but',
-            'furthermore': 'also',
-            'in addition': 'plus',
-            'significant': 'big',
-            'approximately': 'about',
-            'establish': 'set up',
-            'obtain': 'get',
-            'determine': 'find',
-            'evaluate': 'check',
-            'analyze': 'study',
-            'therefore': 'so',
-            'thus': 'so',
-            'hence': 'so'
+            # If English fails, try with shorter text
+            if not audio_paths['original']:
+                short_text = original_text[:1000]
+                audio_paths['original'] = generate_english_audio(
+                    short_text,
+                    "transcript_audio_en_short.mp3"
+                )
+        
+        # Cleanup
+        clean_temp_files(audio_path)
+        
+        return {
+            'srt_original_path': srt_original_path,
+            'srt_translated_path': srt_translated_path,
+            'txt_path': txt_path,
+            'pdf_path': pdf_path,
+            'pptx_path': pptx_path,
+            'audio_paths': audio_paths,
+            'final_text': final_text,
+            'original_text': original_text,
+            'translated_text': translated_text,
+            'structured': structured,
+            'target_lang_name': target_lang_name,
+            'target_lang_code': target_lang_code
         }
         
-        for complex_word, simple_word in replacements.items():
-            text = text.replace(complex_word, simple_word)
-            text = text.replace(complex_word.capitalize(), simple_word.capitalize())
-        
-        return text
-    
-    def generate_real_time_subtitles(self, video_path, callback):
-        """Main function to generate subtitles in real-time"""
-        process = self.extract_audio_stream(video_path)
-        if not process:
-            return
-        
-        self.is_running = True
-        chunk_duration = 3
-        chunk_size = int(16000 * chunk_duration)
-        
-        while self.is_running:
-            audio_chunk = process.stdout.read(chunk_size * 2)
-            
-            if not audio_chunk:
-                break
-            
-            text = self.process_audio_chunk(audio_chunk)
-            
-            if text:
-                callback(text)
-        
-        process.wait()
-        self.is_running = False
-
-# Process video if loaded
-if video_path and os.path.exists(video_path):
-    # Get video information
-    cap = cv2.VideoCapture(video_path)
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    duration_seconds = total_frames / fps if fps > 0 else 0
-    cap.release()
-    
-    # Display video stats
-    st.markdown("## 📊 Video Information")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("🎞️ Total Frames", f"{total_frames:,}")
-    with col2:
-        st.metric("⚡ FPS", f"{fps:.2f}")
-    with col3:
-        st.metric("⏱️ Duration", f"{duration_seconds:.1f}s")
-    with col4:
-        st.metric("📐 Resolution", f"{width}×{height}")
-    
-    # Video Player & Timeline Selection
-    st.markdown("---")
-    st.markdown("## 🎬 Video Preview & Timeline Selection")
-    st.markdown("*Watch the video and select the exact time range for frame extraction*")
-    
-    # Display video player
-    try:
-        with open(video_path, 'rb') as f:
-            video_bytes = f.read()
-        st.video(video_bytes)
     except Exception as e:
-        st.warning(f"Video preview not available: {str(e)}")
+        st.error(f"Error processing video: {str(e)}")
+        import traceback
+        st.code(traceback.format_exc())
+        return None
 
-    # Real-Time Subtitle Generation
+def main():
+    """Main application entry point"""
+    # Load CSS
+    load_css()
+    
+    # Render header
+    render_header()
+    
+    # Render features
+    render_features()
+    
     st.markdown("---")
-    st.markdown("## 🎙️ Real-Time Subtitle Generator")
-    st.markdown("*Watch and learn with live subtitles - perfect for understanding different accents*")
     
-    col1, col2, col3 = st.columns([2, 1, 1])
+    # Render sidebar and get settings
+    settings = render_sidebar()
     
-    with col1:
-        enable_real_time = st.checkbox("🔴 Enable Real-Time Subtitles", value=False)
+    # Render video input
+    video_path, video_filename = render_video_input()
     
-    with col2:
-        if enable_real_time:
-            subtitle_language = st.selectbox(
-                "Subtitle Language",
-                ["Plain English (Simplified)", "Original + Simplified", "Only Key Terms"]
+    if video_path and os.path.exists(video_path):
+        # Get video info
+        video_info = get_video_info(video_path)
+        render_video_info(video_info)
+        
+        # Video Player
+        st.markdown("---")
+        st.markdown("## 🎬 Video Preview")
+        try:
+            with open(video_path, 'rb') as f:
+                video_bytes = f.read()
+            st.video(video_bytes)
+        except Exception as e:
+            st.warning(f"Video preview not available: {str(e)}")
+        
+        # Video to Text & Audio Section
+        st.markdown("---")
+        st.markdown("## 📝 Video to Text & Audio")
+        st.markdown("*Generate structured documents and audio from your video content*")
+        
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col1:
+            generate_pdf_flag = st.checkbox("📄 Generate PDF", value=True)
+        with col2:
+            generate_pptx_flag = st.checkbox("📊 Generate PPTX", value=False)
+        with col3:
+            generate_audio_flag = st.checkbox("🎵 Generate Audio", value=True)
+        
+        # Language options - SIMPLIFIED FOR 3 LANGUAGES
+        st.markdown("### 🌐 Translation Options")
+        
+        # Show current language selection
+        target_lang_name = settings.get('target_lang_name', 'English')
+        target_lang_code = settings.get('target_lang_code', 'en')
+        
+        trans_col1, trans_col2, trans_col3 = st.columns(3)
+        
+        with trans_col1:
+            simplify_text = st.checkbox(
+                "✨ Simplify English",
+                value=True,
+                help="Convert complex English to plain language before translation"
             )
-    
-    with col3:
-        if enable_real_time:
-            accent_adjustment = st.checkbox("🎯 Accent Optimization", value=True)
-    
-    # Real-time subtitle display area
-    if enable_real_time:
-        subtitle_container = st.container()
-        subtitle_generator = RealTimeSubtitleGenerator(model_size="base")
         
-        with subtitle_container:
-            st.markdown("### 📝 Live Subtitles")
-            current_subtitle_placeholder = st.empty()
-            subtitle_history_placeholder = st.empty()
+        with trans_col2:
+            translate_to_target = st.checkbox(
+                f"🌐 Translate to {target_lang_name}",
+                value=True,
+                help=f"Translate transcript to {target_lang_name}"
+            )
         
-        if 'subtitle_history' not in st.session_state:
-            st.session_state.subtitle_history = []
+        with trans_col3:
+            generate_translated_audio = st.checkbox(
+                "🎵 Generate Translated Audio",
+                value=True,
+                help=f"Generate audio in {target_lang_name}"
+            )
         
-        def update_subtitle(text):
-            if text:
-                st.session_state.subtitle_history.append({
-                    'time': time.strftime("%H:%M:%S"),
-                    'text': text
-                })
-                
-                if len(st.session_state.subtitle_history) > 10:
-                    st.session_state.subtitle_history = st.session_state.subtitle_history[-10:]
-                
-                current_subtitle_placeholder.markdown(f"""
-                <div style="
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    padding: 20px;
-                    border-radius: 10px;
-                    text-align: center;
-                    font-size: 1.2rem;
-                    margin: 10px 0;
-                ">
-                    🎯 {text}
-                </div>
-                """, unsafe_allow_html=True)
-                
-                history_text = ""
-                for sub in st.session_state.subtitle_history[-5:]:
-                    history_text += f"⏱️ {sub['time']} | {sub['text']}\n\n"
-                
-                subtitle_history_placeholder.text(history_text)
+        # Update settings with UI selections
+        settings.update({
+            'generate_pdf': generate_pdf_flag,
+            'generate_pptx': generate_pptx_flag,
+            'generate_audio': generate_audio_flag,
+            'simplify_text': simplify_text,
+            'translate_to_target': translate_to_target,
+            'generate_translated_audio': generate_translated_audio
+        })
         
-        # This button should be HERE - inside if enable_real_time block
-        if st.button("🎬 Generate Subtitles", width="stretch"):
-            # Check if ffmpeg is available
-            try:
-                subprocess.run(['ffmpeg', '-version'], capture_output=True, check=True)
-            except:
-                st.error("FFmpeg is not installed. Please install ffmpeg to extract audio.")
-                st.stop()
-            
-            with st.spinner("Processing audio and generating subtitles (this may take 30-60 seconds)..."):
-                try:
-                    # Extract audio from video
-                    audio_path = extract_audio_from_video(video_path)
-                    
-                    if audio_path and os.path.exists(audio_path):
-                        # Load Whisper model (use tiny for faster processing on free tier)
-                        model = whisper.load_model("tiny")
-                        
-                        # Transcribe
-                        result = model.transcribe(audio_path)
-                        
-                        # Collect segments and display subtitles
-                        segments = []
-                        for segment in result["segments"]:
-                            text = segment["text"]
-                            
-                            # Simplify if needed
-                            if subtitle_language == "Plain English (Simplified)":
-                                text = subtitle_generator.simplify_english(text)
-                            
-                            segments.append({
-                                'start': segment['start'],
-                                'end': segment['end'],
-                                'text': text
-                            })
-                            
-                            update_subtitle(text)
-                            time.sleep(0.1)  # Small delay for visual effect
-                        
-                        # Create SRT file for download
-                        srt_path = "subtitles.srt"
-                        with open(srt_path, 'w', encoding='utf-8') as f:
-                            for i, seg in enumerate(segments, 1):
-                                start = format_time(seg['start'])
-                                end = format_time(seg['end'])
-                                text = seg['text']
-                                f.write(f"{i}\n{start} --> {end}\n{text}\n\n")
-                        
-                        # Create plain text file
-                        txt_path = "transcript.txt"
-                        with open(txt_path, 'w', encoding='utf-8') as f:
-                            for seg in segments:
-                                f.write(f"{seg['text']}\n")
-                        
-                        # Offer downloads
-                        col1, col2 = st.columns(2)
-                        
-                        with col1:
-                            with open(srt_path, 'rb') as f:
-                                st.download_button(
-                                    label="📥 Download Subtitles (.srt)",
-                                    data=f,
-                                    file_name="subtitles.srt",
-                                    mime="text/plain",
-                                    width="stretch"
-                                )
-                        
-                        with col2:
-                            with open(txt_path, 'rb') as f:
-                                st.download_button(
-                                    label="📥 Download Transcript (.txt)",
-                                    data=f,
-                                    file_name="transcript.txt",
-                                    mime="text/plain",
-                                    width="stretch"
-                                )
-                        
-                        st.info("💡 Tip: Use VLC or any video player to add the .srt subtitle file while watching the video.")
-                        
-                        # Cleanup
-                        os.unlink(audio_path)
-                        os.unlink(srt_path)
-                        os.unlink(txt_path)
-                        st.success(f"✅ Generated {len(segments)} subtitle segments!")
-                    else:
-                        st.error("Failed to extract audio from video")
-                        
-                except Exception as e:
-                    st.error(f"Error: {str(e)}")
-    
-    # Timeline selection sliders
-    st.markdown("### 📍 Select Time Range")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        start_time = st.slider(
-            "Start Time (seconds)",
-            min_value=0.0,
-            max_value=float(duration_seconds),
-            value=0.0,
-            step=0.5
-        )
-    
-    with col2:
-        end_time = st.slider(
-            "End Time (seconds)",
-            min_value=0.0,
-            max_value=float(duration_seconds),
-            value=float(duration_seconds),
-            step=0.5
-        )
-    
-    # Validate time range
-    if start_time >= end_time:
-        st.error("❌ End time must be greater than start time!")
-        st.stop()
-    
-    # Calculate frames in selected range
-    start_frame = int(start_time * fps)
-    end_frame = int(end_time * fps)
-    frames_in_range = end_frame - start_frame
-    estimated_frames = int(frames_in_range / frame_interval) if frames_in_range > 0 else 0
-    
-    if max_frames > 0 and estimated_frames > max_frames:
-        estimated_frames = max_frames
-    
-    # Visual timeline representation
-    timeline_length = 50
-    if duration_seconds > 0:
-        start_pos = int((start_time / duration_seconds) * timeline_length)
-        end_pos = int((end_time / duration_seconds) * timeline_length)
-        
-        timeline_bar = "░" * timeline_length
-        timeline_list = list(timeline_bar)
-        for i in range(start_pos, min(end_pos, len(timeline_list))):
-            timeline_list[i] = "█"
-        timeline_visual = "".join(timeline_list)
-        
+        # Language info display
+        lang_flag = {'en': '🇬🇧', 'hi': '🇮🇳', 'bn': '🇧🇩'}.get(target_lang_code, '🌐')
         st.markdown(f"""
         <div class="info-box">
-            <strong>📊 Selected Range Details:</strong><br>
-            • ⏱️ Time: {start_time:.1f}s - {end_time:.1f}s<br>
-            • 📏 Duration: {end_time - start_time:.1f} seconds<br>
-            • 🎞️ Frames in range: {frames_in_range:,}<br>
-            • 💾 Frames to extract: {estimated_frames:,} (interval: every {frame_interval} frame)
+            <strong>🌐 Language Settings Summary:</strong><br>
+            • 🎯 Source: {settings['source_lang'].upper() if settings['source_lang'] != 'auto' else 'Auto-detect'}<br>
+            • 🌍 Target: {target_lang_name} {lang_flag}<br>
+            • 🎵 Audio Output: {'Translated audio' if generate_translated_audio else 'Original audio'}<br>
+            • ✨ Simplification: {'Enabled' if simplify_text else 'Disabled'}
         </div>
         """, unsafe_allow_html=True)
         
-        # Display timeline
-        st.text(f"Timeline: {timeline_visual}")
-        st.text(f"{start_time:.1f}s" + " " * (timeline_length - 10) + f"{end_time:.1f}s")
-    
-    st.markdown("---")
-    
-    # START EXTRACTION BUTTON
-    if st.button("🚀 START EXTRACTION", type="primary", width="stretch"):
-        # Progress tracking
-        progress_bar = st.progress(0)
-        status_text = st.empty()
-        preview_image = st.empty()
-        
-        # Create output directory
-        output_dir = tempfile.mkdtemp()
-        frame_count = 0
-        saved_count = 0
-        
-        # Open video
-        cap = cv2.VideoCapture(video_path)
-        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
-        
-        start_time_extract = time.time()
-        current_frame = start_frame
-        
-        while current_frame < end_frame:
-            success, frame = cap.read()
+        # Process button
+        if st.button("🎬 Generate Documents & Audio", type="primary", width="stretch"):
+            result = process_video_to_text(video_path, video_filename, settings)
             
-            if not success:
-                break
-            
-            if max_frames > 0 and saved_count >= max_frames:
-                break
-            
-            if (current_frame - start_frame) % frame_interval == 0:
-                if resize_frames:
-                    frame = cv2.resize(frame, (resize_width, resize_height))
+            if result:
+                # Display results
+                st.markdown("---")
+                st.markdown("## 📥 Download Results")
                 
-                frame_path = os.path.join(output_dir, f'frame_{saved_count:06d}.jpg')
-                cv2.imwrite(frame_path, frame, [cv2.IMWRITE_JPEG_QUALITY, quality])
-                saved_count += 1
+                lang_info = f"Translated to {result['target_lang_name']}" if (settings['translate_to_target'] and settings['target_lang_code'] != 'en') else "Original language"
+                st.markdown(f"""
+                <div class="success-badge" style="background: #d4edda; padding: 1rem; text-align: center;">
+                    <h3>✅ Processing Complete!</h3>
+                    <p>📝 Generated content in: {lang_info}</p>
+                    <p>🎵 Audio available in: {'Translated language' if generate_translated_audio else 'English'}</p>
+                </div>
+                """, unsafe_allow_html=True)
                 
-                # Show preview every 10 frames
-                if saved_count % 10 == 0:
-                    preview_image.image(frame, caption=f"Preview: Frame {saved_count}", use_container_width=True)
-            
-            current_frame += 1
-            frame_count += 1
-            
-            # Update progress
-            progress = (current_frame - start_frame) / frames_in_range if frames_in_range > 0 else 1
-            progress_bar.progress(min(progress, 1.0))
-            
-            elapsed_time = time.time() - start_time_extract
-            fps_processing = frame_count / elapsed_time if elapsed_time > 0 else 0
-            status_text.info(f"📊 Processing: {frame_count:,}/{frames_in_range:,} frames | 💾 Saved: {saved_count:,} frames | ⚡ Speed: {fps_processing:.1f} fps")
-        
-        cap.release()
-        extraction_time = time.time() - start_time_extract
-        
-        # Completion
-        progress_bar.progress(1.0)
-        
-        if saved_count > 0:
-            # Create ZIP
-            with st.spinner("Creating ZIP archive..."):
-                zip_path = tempfile.NamedTemporaryFile(delete=False, suffix='.zip').name
-                with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                    for filename in os.listdir(output_dir):
-                        filepath = os.path.join(output_dir, filename)
-                        zipf.write(filepath, filename)
+                # Documents
+                st.markdown("### 📄 Documents")
+                download_cols = st.columns(3)
                 
-                zip_size = os.path.getsize(zip_path) / (1024 * 1024)
+                with download_cols[0]:
+                    with open(result['srt_original_path'], 'rb') as f:
+                        st.download_button(
+                            label="📥 Original SRT (English)",
+                            data=f,
+                            file_name=f"{os.path.splitext(video_filename)[0]}_original.srt",
+                            mime="text/plain",
+                            width="stretch"
+                        )
+                
+                if result['srt_translated_path'] and os.path.exists(result['srt_translated_path']):
+                    with download_cols[1]:
+                        with open(result['srt_translated_path'], 'rb') as f:
+                            st.download_button(
+                                label=f"📥 {result['target_lang_name']} SRT",
+                                data=f,
+                                file_name=f"{os.path.splitext(video_filename)[0]}_{result['target_lang_code']}.srt",
+                                mime="text/plain",
+                                width="stretch"
+                            )
+                
+                with download_cols[2]:
+                    with open(result['txt_path'], 'rb') as f:
+                        st.download_button(
+                            label="📥 TXT Transcript",
+                            data=f,
+                            file_name=f"{os.path.splitext(video_filename)[0]}_transcript.txt",
+                            mime="text/plain",
+                            width="stretch"
+                        )
+                
+                # PDF download
+                if result['pdf_path'] and os.path.exists(result['pdf_path']):
+                    with open(result['pdf_path'], 'rb') as f:
+                        st.download_button(
+                            label="📄 Download PDF",
+                            data=f,
+                            file_name=f"{os.path.splitext(video_filename)[0]}_transcript.pdf",
+                            mime="application/pdf",
+                            width="stretch"
+                        )
+                
+                # PPTX download
+                if result['pptx_path'] and os.path.exists(result['pptx_path']):
+                    with open(result['pptx_path'], 'rb') as f:
+                        st.download_button(
+                            label="📊 Download PPTX",
+                            data=f,
+                            file_name=f"{os.path.splitext(video_filename)[0]}_presentation.pptx",
+                            mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                            width="stretch"
+                        )
+                
+                # Audio files
+                if result['audio_paths']:
+                    st.markdown("### 🎵 Audio Files")
+                    audio_cols = st.columns(2)
+                    
+                    if 'original' in result['audio_paths'] and result['audio_paths']['original'] and os.path.exists(result['audio_paths']['original']):
+                        with audio_cols[0]:
+                            with open(result['audio_paths']['original'], 'rb') as f:
+                                audio_bytes = f.read()
+                                st.audio(audio_bytes, format="audio/mp3")
+                                st.download_button(
+                                    label="🎵 Download English Audio",
+                                    data=f,
+                                    file_name=f"{os.path.splitext(video_filename)[0]}_en.mp3",
+                                    mime="audio/mpeg",
+                                    width="stretch"
+                                )
+                    
+                    if 'translated' in result['audio_paths'] and result['audio_paths']['translated'] and os.path.exists(result['audio_paths']['translated']):
+                        with audio_cols[1]:
+                            with open(result['audio_paths']['translated'], 'rb') as f:
+                                audio_bytes = f.read()
+                                st.audio(audio_bytes, format="audio/mp3")
+                                st.download_button(
+                                    label=f"🎵 Download {result['target_lang_name']} Audio",
+                                    data=f,
+                                    file_name=f"{os.path.splitext(video_filename)[0]}_{result['target_lang_code']}.mp3",
+                                    mime="audio/mpeg",
+                                    width="stretch"
+                                )
+                
+                # Previews
+                with st.expander("📝 Preview Transcript"):
+                    st.text(result['final_text'][:2000] + ("..." if len(result['final_text']) > 2000 else ""))
+                
+                if settings['translate_to_target'] and settings['target_lang_code'] != 'en':
+                    with st.expander(f"🌐 Translation Preview ({result['target_lang_name']})"):
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.markdown("**Original (English):**")
+                            st.text(result['original_text'][:500] + ("..." if len(result['original_text']) > 500 else ""))
+                        with col2:
+                            st.markdown(f"**Translated ({result['target_lang_name']}):**")
+                            st.text(result['translated_text'][:500] + ("..." if len(result['translated_text']) > 500 else ""))
+                
+                # Cleanup
+                clean_temp_files(
+                    result['srt_original_path'],
+                    result['txt_path'],
+                    result['srt_translated_path'],
+                    result['pdf_path'],
+                    result['pptx_path']
+                )
+                for audio_file in result['audio_paths'].values():
+                    clean_temp_files(audio_file)
+        
+        # Real-time subtitles
+        render_real_time_subtitles(video_path)
+        
+        # Timeline and frame extraction
+        st.markdown("---")
+        st.markdown("## 🎬 Video Preview & Timeline Selection")
+        st.markdown("*Watch the video and select the exact time range for frame extraction*")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            start_time = st.slider(
+                "Start Time (seconds)",
+                min_value=0.0,
+                max_value=float(video_info['duration']),
+                value=0.0,
+                step=0.5
+            )
+        
+        with col2:
+            end_time = st.slider(
+                "End Time (seconds)",
+                min_value=0.0,
+                max_value=float(video_info['duration']),
+                value=float(video_info['duration']),
+                step=0.5
+            )
+        
+        if start_time >= end_time:
+            st.error("❌ End time must be greater than start time!")
+            st.stop()
+        
+        start_frame = int(start_time * video_info['fps'])
+        end_frame = int(end_time * video_info['fps'])
+        frames_in_range = end_frame - start_frame
+        estimated_frames = int(frames_in_range / settings['frame_interval']) if frames_in_range > 0 else 0
+        
+        if settings['max_frames'] > 0 and estimated_frames > settings['max_frames']:
+            estimated_frames = settings['max_frames']
+        
+        # Timeline visual
+        timeline_length = 50
+        if video_info['duration'] > 0:
+            start_pos = int((start_time / video_info['duration']) * timeline_length)
+            end_pos = int((end_time / video_info['duration']) * timeline_length)
             
-            # Success message
-            st.balloons()
+            timeline_bar = "░" * timeline_length
+            timeline_list = list(timeline_bar)
+            for i in range(start_pos, min(end_pos, len(timeline_list))):
+                timeline_list[i] = "█"
+            timeline_visual = "".join(timeline_list)
+            
             st.markdown(f"""
-            <div class="success-badge" style="background: #d4edda; padding: 1rem; text-align: center;">
-                <h3>✅ Extraction Complete!</h3>
-                <p>📊 Saved {saved_count:,} frames from {frame_count:,} frames</p>
-                <p>⏱️ Processing time: {extraction_time:.1f} seconds</p>
-                <p>💾 ZIP size: {zip_size:.2f} MB</p>
-                <p>🎯 Time range: {start_time:.1f}s - {end_time:.1f}s</p>
+            <div class="info-box">
+                <strong>📊 Selected Range Details:</strong><br>
+                • ⏱️ Time: {start_time:.1f}s - {end_time:.1f}s<br>
+                • 📏 Duration: {end_time - start_time:.1f} seconds<br>
+                • 🎞️ Frames in range: {frames_in_range:,}<br>
+                • 💾 Frames to extract: {estimated_frames:,} (interval: every {settings['frame_interval']} frame)
             </div>
             """, unsafe_allow_html=True)
             
-            # Download button
-            with open(zip_path, 'rb') as f:
-                st.download_button(
-                    label=f"📥 Download Frames ({saved_count} images, {zip_size:.1f} MB)",
-                    data=f,
-                    file_name=f"frames_{os.path.splitext(video_filename)[0]}.zip",
-                    mime="application/zip",
-                    width="stretch"
-                )
+            st.text(f"Timeline: {timeline_visual}")
+            st.text(f"{start_time:.1f}s" + " " * (timeline_length - 10) + f"{end_time:.1f}s")
+        
+        st.markdown("---")
+        
+        # Start Extraction Button
+        if st.button("🚀 START EXTRACTION", type="primary", width="stretch"):
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            preview_image = st.empty()
             
-            # Preview gallery
-            st.markdown("## 🖼️ Frame Gallery")
-            frame_files = sorted([f for f in os.listdir(output_dir) if f.endswith('.jpg')])
-            if frame_files:
-                preview_cols = st.columns(min(6, len(frame_files)))
-                for i, col in enumerate(preview_cols):
-                    if i < len(frame_files):
-                        preview_path = os.path.join(output_dir, frame_files[i])
-                        col.image(preview_path, caption=f"Frame {i+1}", use_container_width=True)
+            result = extract_frames(
+                video_path,
+                start_time,
+                end_time,
+                video_info['fps'],
+                settings['frame_interval'],
+                settings['resize_frames'],
+                settings['resize_width'],
+                settings['resize_height'],
+                settings['quality'],
+                settings['max_frames']
+            )
+            
+            if result['saved_count'] > 0:
+                zip_path, zip_size = create_zip_from_frames(result['output_dir'])
                 
-                if len(frame_files) > 6:
-                    st.caption(f"Showing first 6 frames out of {len(frame_files)} total frames")
-            
-            # Cleanup
-            for filename in os.listdir(output_dir):
-                os.unlink(os.path.join(output_dir, filename))
-            os.rmdir(output_dir)
-        else:
-            st.warning("No frames were extracted. Try adjusting the settings.")
+                st.balloons()
+                st.markdown(f"""
+                <div class="success-badge" style="background: #d4edda; padding: 1rem; text-align: center;">
+                    <h3>✅ Extraction Complete!</h3>
+                    <p>📊 Saved {result['saved_count']:,} frames from {result['frame_count']:,} frames</p>
+                    <p>⏱️ Processing time: {result['extraction_time']:.1f} seconds</p>
+                    <p>💾 ZIP size: {zip_size:.2f} MB</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                with open(zip_path, 'rb') as f:
+                    st.download_button(
+                        label=f"📥 Download Frames ({result['saved_count']} images, {zip_size:.1f} MB)",
+                        data=f,
+                        file_name=f"frames_{os.path.splitext(video_filename)[0]}.zip",
+                        mime="application/zip",
+                        width="stretch"
+                    )
+                
+                # Frame gallery
+                st.markdown("## 🖼️ Frame Gallery")
+                previews = get_frame_previews(result['output_dir'])
+                if previews:
+                    preview_cols = st.columns(min(6, len(previews)))
+                    for i, col in enumerate(preview_cols):
+                        if i < len(previews):
+                            col.image(previews[i], caption=f"Frame {i+1}", use_container_width=True)
+                    
+                    if len(previews) < result['saved_count']:
+                        st.caption(f"Showing first {len(previews)} frames out of {result['saved_count']} total frames")
+                
+                # Cleanup
+                for filename in os.listdir(result['output_dir']):
+                    os.unlink(os.path.join(result['output_dir'], filename))
+                os.rmdir(result['output_dir'])
+                clean_temp_files(zip_path)
+            else:
+                st.warning("No frames were extracted. Try adjusting the settings.")
+        
+        # Clear button
+        if st.button("🗑️ Clear Video", width="stretch"):
+            if video_path and os.path.exists(video_path):
+                os.unlink(video_path)
+            st.rerun()
     
-    # Clear button
-    if st.button("🗑️ Clear Video", width="stretch"):
-        if video_path and os.path.exists(video_path):
-            os.unlink(video_path)
-        st.rerun()
+    else:
+        if video_path is None:
+            st.info("👈 Upload a video or provide a URL to get started!")
+    
+    # Footer
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; color: #666; padding: 2rem;">
+        <p>Made with ❤️ using OpenCV, Whisper & Streamlit</p>
+        <p>✨ Supports: English 🇬🇧 | Hindi 🇮🇳 | Bengali 🇧🇩 ✨</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-else:
-    if video_path is None:
-        st.info("👈 Upload a video or provide a URL to get started!")
-
-# Footer
-st.markdown("---")
-st.markdown("""
-<div style="text-align: center; color: #666; padding: 2rem;">
-    <p>Made with ❤️ using OpenCV & Streamlit</p>
-    <p>✨ NEW: Real-time subtitles for better lecture comprehension! ✨</p>
-</div>
-""", unsafe_allow_html=True)
+if __name__ == "__main__":
+    main()
