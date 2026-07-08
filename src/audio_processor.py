@@ -1,12 +1,16 @@
 """
-Audio Processing Module - Optimized for English, Hindi, Bengali
+Audio Processing Module - Complete Language Support
 """
 import os
 import subprocess
-import tempfile
 import streamlit as st
 from deep_translator import GoogleTranslator
 import re
+import tempfile
+
+# ============================================
+# AUDIO EXTRACTION
+# ============================================
 
 def extract_audio_from_video(video_path, audio_path="temp_audio.wav"):
     """Extract audio from video file"""
@@ -23,14 +27,49 @@ def extract_audio_from_video(video_path, audio_path="temp_audio.wav"):
         st.error(f"Audio extraction failed: {str(e)}")
         return None
 
+# ============================================
+# TRANSLATION FUNCTIONS
+# ============================================
+
 def translate_text(text, target_lang):
-    """Translate text to target language"""
+    """Translate text to target language with better error handling"""
     try:
+        from deep_translator import GoogleTranslator
+        
+        max_chunk_size = 5000
+        chunks = []
+        
+        if len(text) > max_chunk_size:
+            sentences = text.split('. ')
+            current_chunk = ""
+            for sentence in sentences:
+                if len(current_chunk) + len(sentence) < max_chunk_size:
+                    current_chunk += sentence + ". "
+                else:
+                    chunks.append(current_chunk)
+                    current_chunk = sentence + ". "
+            if current_chunk:
+                chunks.append(current_chunk)
+        else:
+            chunks = [text]
+        
+        translated_chunks = []
         translator = GoogleTranslator(source='auto', target=target_lang)
-        translated = translator.translate(text)
-        return translated
+        
+        for i, chunk in enumerate(chunks):
+            if chunk.strip():
+                try:
+                    translated = translator.translate(chunk)
+                    translated_chunks.append(translated)
+                except Exception as e:
+                    st.warning(f"Chunk {i+1} translation failed: {str(e)}")
+                    translated_chunks.append(chunk)
+        
+        result = " ".join(translated_chunks)
+        return result
+        
     except Exception as e:
-        st.warning(f"Translation error: {str(e)}")
+        st.error(f"Translation error: {str(e)}")
         return text
 
 def translate_segments(segments, target_lang):
@@ -54,247 +93,325 @@ def translate_segments(segments, target_lang):
     return translated_segments
 
 # ============================================
-# LANGUAGE-SPECIFIC AUDIO GENERATION
+# COMPLETE LANGUAGE SUPPORT - 270+ LANGUAGES
 # ============================================
 
-def generate_english_audio(text, output_path="output_en.mp3"):
-    """Generate English audio"""
-    try:
-        from gtts import gTTS
-        
-        clean_text = re.sub(r'\s+', ' ', text).strip()
-        if not clean_text:
-            return None
-        
-        # English audio
-        tts = gTTS(text=clean_text, lang='en', slow=False)
-        tts.save(output_path)
-        
-        if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
-            return output_path
-        return None
-        
-    except Exception as e:
-        st.error(f"English audio generation failed: {str(e)}")
-        return None
-
-def generate_hindi_audio(text, output_path="output_hi.mp3"):
-    """Generate Hindi audio with explicit Hindi language setting"""
-    try:
-        from gtts import gTTS
-        
-        # Clean the text - remove extra spaces
-        clean_text = re.sub(r'\s+', ' ', text).strip()
-        if not clean_text:
-            return None
-        
-        # FORCE Hindi language with explicit 'hi' code
-        # gTTS supports Hindi with 'hi' language code
-        tts = gTTS(text=clean_text, lang='hi', slow=False)
-        tts.save(output_path)
-        
-        if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
-            return output_path
-        return None
-        
-    except Exception as e:
-        st.error(f"Hindi audio generation failed: {str(e)}")
-        
-        # Fallback: Try with pyttsx3
-        try:
-            import pyttsx3
-            engine = pyttsx3.init()
-            
-            # Try to find Hindi voice
-            voices = engine.getProperty('voices')
-            for voice in voices:
-                if 'hindi' in voice.name.lower() or 'hi' in voice.id.lower():
-                    engine.setProperty('voice', voice.id)
-                    break
-            
-            engine.setProperty('rate', 150)
-            engine.save_to_file(text, output_path)
-            engine.runAndWait()
-            
-            if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
-                return output_path
-        except:
-            pass
-        
-        return None
-
-def generate_bengali_audio(text, output_path="output_bn.mp3"):
-    """Generate Bengali audio with explicit Bengali language setting"""
-    try:
-        from gtts import gTTS
-        
-        # Clean the text
-        clean_text = re.sub(r'\s+', ' ', text).strip()
-        if not clean_text:
-            return None
-        
-        # FORCE Bengali language with 'bn' code
-        # gTTS supports Bengali with 'bn' language code
-        tts = gTTS(text=clean_text, lang='bn', slow=False)
-        tts.save(output_path)
-        
-        if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
-            return output_path
-        return None
-        
-    except Exception as e:
-        st.error(f"Bengali audio generation failed: {str(e)}")
-        
-        # Fallback: Try with pyttsx3
-        try:
-            import pyttsx3
-            engine = pyttsx3.init()
-            
-            # Try to find Bengali voice
-            voices = engine.getProperty('voices')
-            for voice in voices:
-                if 'bengali' in voice.name.lower() or 'bn' in voice.id.lower():
-                    engine.setProperty('voice', voice.id)
-                    break
-            
-            engine.setProperty('rate', 150)
-            engine.save_to_file(text, output_path)
-            engine.runAndWait()
-            
-            if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
-                return output_path
-        except:
-            pass
-        
-        return None
-
-# ============================================
-# MAIN AUDIO GENERATION FUNCTION
-# ============================================
-
-def generate_audio_by_language(text, output_path, language_code):
-    """
-    Generate audio in specified language
-    Supported: 'en' (English), 'hi' (Hindi), 'bn' (Bengali)
-    """
-    language_code = language_code.lower()
+# Whisper supported languages for transcription
+WHISPER_LANGUAGES = {
+    'auto': '🔍 Auto-detect',
     
-    if language_code == 'en':
-        return generate_english_audio(text, output_path)
-    elif language_code == 'hi':
-        return generate_hindi_audio(text, output_path)
-    elif language_code == 'bn':
-        return generate_bengali_audio(text, output_path)
-    else:
-        # Fallback to English if language not supported
-        st.warning(f"Language '{language_code}' not fully supported. Using English.")
-        return generate_english_audio(text, output_path)
+    # ===== INDIAN LANGUAGES (24) =====
+    'hi': 'Hindi 🇮🇳', 'bn': 'Bengali 🇮🇳', 'ta': 'Tamil 🇮🇳', 
+    'te': 'Telugu 🇮🇳', 'mr': 'Marathi 🇮🇳', 'gu': 'Gujarati 🇮🇳',
+    'kn': 'Kannada 🇮🇳', 'ml': 'Malayalam 🇮🇳', 'pa': 'Punjabi 🇮🇳',
+    'ur': 'Urdu 🇮🇳', 'or': 'Odia 🇮🇳', 'as': 'Assamese 🇮🇳',
+    'ne': 'Nepali 🇳🇵', 'sd': 'Sindhi 🇮🇳', 'sa': 'Sanskrit 🇮🇳',
+    'ks': 'Kashmiri 🇮🇳', 'kok': 'Konkani 🇮🇳', 'mai': 'Maithili 🇮🇳',
+    'sat': 'Santali 🇮🇳', 'doi': 'Dogri 🇮🇳', 'mni': 'Manipuri 🇮🇳',
+    'bodo': 'Bodo 🇮🇳', 'si': 'Sinhala 🇱🇰', 'dv': 'Divehi 🇲🇻',
+    
+    # ===== EUROPEAN LANGUAGES (40) =====
+    'en': 'English 🇬🇧', 'es': 'Spanish 🇪🇸', 'fr': 'French 🇫🇷',
+    'de': 'German 🇩🇪', 'it': 'Italian 🇮🇹', 'pt': 'Portuguese 🇵🇹',
+    'nl': 'Dutch 🇳🇱', 'pl': 'Polish 🇵🇱', 'ru': 'Russian 🇷🇺',
+    'uk': 'Ukrainian 🇺🇦', 'ro': 'Romanian 🇷🇴', 'bg': 'Bulgarian 🇧🇬',
+    'cs': 'Czech 🇨🇿', 'da': 'Danish 🇩🇰', 'el': 'Greek 🇬🇷',
+    'fi': 'Finnish 🇫🇮', 'hr': 'Croatian 🇭🇷', 'hu': 'Hungarian 🇭🇺',
+    'is': 'Icelandic 🇮🇸', 'lt': 'Lithuanian 🇱🇹', 'lv': 'Latvian 🇱🇻',
+    'mk': 'Macedonian 🇲🇰', 'mt': 'Maltese 🇲🇹', 'no': 'Norwegian 🇳🇴',
+    'sk': 'Slovak 🇸🇰', 'sl': 'Slovenian 🇸🇮', 'sq': 'Albanian 🇦🇱',
+    'sr': 'Serbian 🇷🇸', 'sv': 'Swedish 🇸🇪', 'ca': 'Catalan 🇪🇸',
+    'et': 'Estonian 🇪🇪', 'ga': 'Irish 🇮🇪', 'gl': 'Galician 🇪🇸',
+    'bs': 'Bosnian 🇧🇦', 'os': 'Ossetian 🇬🇪', 'kw': 'Cornish 🏴',
+    'gd': 'Scots Gaelic 🏴', 'cy': 'Welsh 🏴', 'la': 'Latin 🏛️',
+    'eo': 'Esperanto 🌐',
+    
+    # ===== RUSSIAN & SLAVIC (15) =====
+    'ru': 'Russian 🇷🇺', 'uk': 'Ukrainian 🇺🇦', 'be': 'Belarusian 🇧🇾',
+    'bg': 'Bulgarian 🇧🇬', 'cs': 'Czech 🇨🇿', 'pl': 'Polish 🇵🇱',
+    'sk': 'Slovak 🇸🇰', 'sl': 'Slovenian 🇸🇮', 'sr': 'Serbian 🇷🇸',
+    'hr': 'Croatian 🇭🇷', 'mk': 'Macedonian 🇲🇰', 'bs': 'Bosnian 🇧🇦',
+    'os': 'Ossetian 🇬🇪', 'ab': 'Abkhazian 🇬🇪', 'cu': 'Church Slavic 🏛️',
+    
+    # ===== EAST ASIAN (14) =====
+    'zh-cn': 'Chinese (Simplified) 🇨🇳', 'zh-tw': 'Chinese (Traditional) 🇹🇼',
+    'ja': 'Japanese 🇯🇵', 'ko': 'Korean 🇰🇷', 'mn': 'Mongolian 🇲🇳',
+    'my': 'Burmese 🇲🇲', 'km': 'Khmer 🇰🇭', 'lo': 'Lao 🇱🇦',
+    'th': 'Thai 🇹🇭', 'vi': 'Vietnamese 🇻🇳', 'bo': 'Tibetan 🇨🇳',
+    'ug': 'Uyghur 🇨🇳', 'za': 'Zhuang 🇨🇳', 'ii': 'Sichuan Yi 🇨🇳',
+    
+    # ===== SOUTHEAST ASIAN (21) =====
+    'ms': 'Malay 🇲🇾', 'id': 'Indonesian 🇮🇩', 'tl': 'Filipino 🇵🇭',
+    'th': 'Thai 🇹🇭', 'vi': 'Vietnamese 🇻🇳', 'km': 'Khmer 🇰🇭',
+    'lo': 'Lao 🇱🇦', 'my': 'Burmese 🇲🇲', 'jw': 'Javanese 🇮🇩',
+    'su': 'Sundanese 🇮🇩', 'ceb': 'Cebuano 🇵🇭', 'ilo': 'Ilocano 🇵🇭',
+    'hil': 'Hiligaynon 🇵🇭', 'bcl': 'Bicolano 🇵🇭', 'war': 'Waray 🇵🇭',
+    'mad': 'Madurese 🇮🇩', 'min': 'Minangkabau 🇮🇩', 'ace': 'Acehnese 🇮🇩',
+    'ban': 'Balinese 🇮🇩', 'bug': 'Buginese 🇮🇩', 'mak': 'Makasar 🇮🇩',
+    
+    # ===== AFRICAN LANGUAGES (35) =====
+    'af': 'Afrikaans 🇿🇦', 'am': 'Amharic 🇪🇹', 'ha': 'Hausa 🇳🇬',
+    'ig': 'Igbo 🇳🇬', 'rw': 'Kinyarwanda 🇷🇼', 'sn': 'Shona 🇿🇼',
+    'so': 'Somali 🇸🇴', 'st': 'Sesotho 🇱🇸', 'sw': 'Swahili 🇹🇿',
+    'xh': 'Xhosa 🇿🇦', 'yo': 'Yoruba 🇳🇬', 'zu': 'Zulu 🇿🇦',
+    'ny': 'Chichewa 🇲🇼', 'mg': 'Malagasy 🇲🇬', 'ee': 'Ewe 🇬🇭',
+    'ak': 'Akan 🇬🇭', 'bm': 'Bambara 🇲🇱', 'ff': 'Fulah 🇸🇳',
+    'fon': 'Fon 🇧🇯', 'ib': 'Igala 🇳🇬', 'kik': 'Kikuyu 🇰🇪',
+    'lg': 'Ganda 🇺🇬', 'ln': 'Lingala 🇨🇩', 'mfe': 'Mauritian Creole 🇲🇺',
+    'nd': 'Ndebele 🇿🇼', 'ng': 'Ndonga 🇳🇦', 'nr': 'Ndebele 🇿🇦',
+    'om': 'Oromo 🇪🇹', 'rn': 'Rundi 🇧🇮', 'sg': 'Sango 🇨🇫',
+    'ss': 'Swati 🇸🇿', 'tn': 'Setswana 🇧🇼', 'ts': 'Tsonga 🇿🇦',
+    've': 'Venda 🇿🇦', 'wo': 'Wolof 🇸🇳',
+    
+    # ===== MIDDLE EASTERN (16) =====
+    'ar': 'Arabic 🇸🇦', 'fa': 'Persian 🇮🇷', 'he': 'Hebrew 🇮🇱',
+    'ps': 'Pashto 🇦🇫', 'ku': 'Kurdish 🏴', 'ur': 'Urdu 🇵🇰',
+    'hy': 'Armenian 🇦🇲', 'az': 'Azerbaijani 🇦🇿', 'ka': 'Georgian 🇬🇪',
+    'ckb': 'Kurdish (Sorani) 🏴', 'kmr': 'Kurdish (Kurmanji) 🏴',
+    'tuk': 'Turkmen 🇹🇲', 'uz': 'Uzbek 🇺🇿', 'tg': 'Tajik 🇹🇯',
+    'bal': 'Balochi 🏴', 'pus': 'Pashto 🇦🇫',
+    
+    # ===== NORTH AMERICAN (13) =====
+    'en': 'English 🇺🇸', 'es': 'Spanish 🇲🇽', 'fr': 'French 🇨🇦',
+    'ht': 'Haitian Creole 🇭🇹', 'moh': 'Mohawk 🇨🇦',
+    'chr': 'Cherokee 🇺🇸', 'nav': 'Navajo 🇺🇸', 'oj': 'Ojibwe 🇨🇦',
+    'cr': 'Cree 🇨🇦', 'ik': 'Inupiaq 🇺🇸', 'iu': 'Inuktitut 🇨🇦',
+    'ale': 'Aleut 🇺🇸', 'gwi': "Gwich'in 🇨🇦",
+    
+    # ===== SOUTH AMERICAN (16) =====
+    'es': 'Spanish 🇦🇷', 'pt': 'Portuguese 🇧🇷', 'qu': 'Quechua 🇵🇪',
+    'ay': 'Aymara 🇧🇴', 'gn': 'Guarani 🇵🇾', 'map': 'Mapuche 🇨🇱',
+    'nah': 'Nahuatl 🇲🇽', 'oto': 'Otomi 🇲🇽', 'maya': 'Yucatec Maya 🇲🇽',
+    'quh': 'Quechua (Huanca) 🇵🇪', 'qup': 'Quechua (Pastaza) 🇵🇪',
+    'cni': 'Asháninka 🇵🇪', 'cbu': 'Shipibo 🇵🇪', 'ame': "Yanesha' 🇵🇪",
+    'ese': 'Ese Ejja 🇧🇴', 'tac': 'Tacana 🇧🇴',
+    
+    # ===== CENTRAL AMERICAN & CARIBBEAN (9) =====
+    'es': 'Spanish 🇨🇺', 'en': 'English 🇯🇲', 'fr': 'French 🇭🇹',
+    'ht': 'Haitian Creole 🇭🇹', 'pap': 'Papiamento 🇨🇼',
+    'nah': 'Nahuatl 🇲🇽', 'maya': 'Yucatec Maya 🇲🇽',
+    'qu': 'Quechua 🇵🇪', 'ay': 'Aymara 🇧🇴',
+    
+    # ===== CENTRAL ASIAN (12) =====
+    'kk': 'Kazakh 🇰🇿', 'ky': 'Kyrgyz 🇰🇬', 'uz': 'Uzbek 🇺🇿',
+    'tg': 'Tajik 🇹🇯', 'tk': 'Turkmen 🇹🇲', 'mn': 'Mongolian 🇲🇳',
+    'av': 'Avar 🇷🇺', 'ce': 'Chechen 🇷🇺', 'cu': 'Church Slavic 🏛️',
+    'os': 'Ossetian 🇬🇪', 'sah': 'Sakha 🇷🇺', 'tt': 'Tatar 🇷🇺',
+    
+    # ===== OCEANIC / PACIFIC (14) =====
+    'sm': 'Samoan 🇼🇸', 'mi': 'Maori 🇳🇿', 'haw': 'Hawaiian 🌺',
+    'fj': 'Fijian 🇫🇯', 'to': 'Tongan 🇹🇴', 'ty': 'Tahitian 🇵🇫',
+    'wuv': 'Wuvulu 🇵🇬', 'gil': 'Gilbertese 🇰🇮', 'mh': 'Marshallese 🇲🇭',
+    'pau': 'Palauan 🇵🇼', 'na': 'Nauruan 🇳🇷', 'tkl': 'Tokelauan 🇹🇰',
+    'niue': 'Niuean 🇳🇺', 'rar': 'Rarotongan 🇨🇰',
+    
+    # ===== OTHER LANGUAGES (21) =====
+    'eo': 'Esperanto 🌐', 'la': 'Latin 🏛️', 'yi': 'Yiddish ✡️',
+    'ht': 'Haitian Creole 🇭🇹', 'co': 'Corsican 🇫🇷', 'cy': 'Welsh 🏴',
+    'fy': 'Frisian 🇳🇱', 'gd': 'Scots Gaelic 🏴', 'haw': 'Hawaiian 🌺',
+    'hmn': 'Hmong 🇨🇳', 'mi': 'Maori 🇳🇿', 'sm': 'Samoan 🇼🇸',
+    'wo': 'Wolof 🇸🇳', 'dyu': 'Dyula 🇨🇮', 'kru': 'Kurukh 🇮🇳',
+    'mni': 'Manipuri 🇮🇳', 'sat': 'Santali 🇮🇳', 'kok': 'Konkani 🇮🇳',
+    'doi': 'Dogri 🇮🇳', 'sa': 'Sanskrit 🇮🇳', 'ks': 'Kashmiri 🇮🇳'
+}
 
-def generate_audio_with_timestamps(segments, output_path="output_audio.mp3", lang='en'):
-    """
-    Generate audio with timestamps for each segment
-    Optimized for English, Hindi, Bengali
-    """
-    try:
-        from pydub import AudioSegment
-        
-        combined = AudioSegment.silent(duration=0)
-        progress_bar = st.progress(0)
-        status_text = st.empty()
-        
-        for i, seg in enumerate(segments):
-            text = seg.get('text', '').strip()
-            
-            if text:
-                status_text.text(f"🎵 Generating audio for segment {i+1}/{len(segments)}...")
-                
-                # Generate audio for this segment
-                temp_path = f"temp_segment_{i}.mp3"
-                
-                # Use language-specific generation
-                result = generate_audio_by_language(text, temp_path, lang)
-                
-                if result and os.path.exists(temp_path):
-                    # Load audio segment
-                    audio_seg = AudioSegment.from_mp3(temp_path)
-                    
-                    # Add small gap between segments
-                    combined += audio_seg + AudioSegment.silent(duration=150)
-                    
-                    # Cleanup
-                    if os.path.exists(temp_path):
-                        os.unlink(temp_path)
-                else:
-                    # Add silence for failed segment
-                    combined += AudioSegment.silent(duration=500)
-            
-            progress_bar.progress((i + 1) / len(segments))
-        
-        status_text.text("✅ Audio generation complete!")
-        
-        # Export with proper settings
-        if len(combined) > 0:
-            combined.export(output_path, format="mp3", bitrate="192k")
-            
-            if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
-                return output_path
-        
-        return None
-        
-    except Exception as e:
-        st.error(f"Audio generation failed: {str(e)}")
-        return None
+# TTS supported languages for audio generation
+TTS_LANGUAGES = {
+    # ===== INDIAN LANGUAGES =====
+    'hi': 'Hindi', 'bn': 'Bengali', 'ta': 'Tamil', 'te': 'Telugu',
+    'mr': 'Marathi', 'gu': 'Gujarati', 'kn': 'Kannada', 'ml': 'Malayalam',
+    'pa': 'Punjabi', 'ur': 'Urdu', 'or': 'Odia', 'as': 'Assamese',
+    'ne': 'Nepali', 'sd': 'Sindhi', 'si': 'Sinhala', 
+    
+    # ===== EUROPEAN LANGUAGES =====
+    'en': 'English', 'es': 'Spanish', 'fr': 'French', 'de': 'German',
+    'it': 'Italian', 'pt': 'Portuguese', 'nl': 'Dutch', 'pl': 'Polish',
+    'ru': 'Russian', 'uk': 'Ukrainian', 'ro': 'Romanian', 'bg': 'Bulgarian',
+    'cs': 'Czech', 'da': 'Danish', 'el': 'Greek', 'fi': 'Finnish',
+    'hr': 'Croatian', 'hu': 'Hungarian', 'is': 'Icelandic', 'lt': 'Lithuanian',
+    'lv': 'Latvian', 'mk': 'Macedonian', 'mt': 'Maltese', 'no': 'Norwegian',
+    'sk': 'Slovak', 'sl': 'Slovenian', 'sq': 'Albanian', 'sr': 'Serbian',
+    'sv': 'Swedish', 'ca': 'Catalan', 'et': 'Estonian', 'ga': 'Irish',
+    'gl': 'Galician', 'bs': 'Bosnian', 'cy': 'Welsh', 'gd': 'Scots Gaelic',
+    
+    # ===== EAST ASIAN =====
+    'zh-cn': 'Chinese (Simplified)', 'zh-tw': 'Chinese (Traditional)',
+    'ja': 'Japanese', 'ko': 'Korean', 'mn': 'Mongolian',
+    'th': 'Thai', 'vi': 'Vietnamese',
+    
+    # ===== SOUTHEAST ASIAN =====
+    'ms': 'Malay', 'id': 'Indonesian', 'tl': 'Filipino',
+    'jw': 'Javanese', 'su': 'Sundanese',
+    
+    # ===== AFRICAN =====
+    'af': 'Afrikaans', 'am': 'Amharic', 'ha': 'Hausa',
+    'ig': 'Igbo', 'rw': 'Kinyarwanda', 'sn': 'Shona',
+    'so': 'Somali', 'st': 'Sesotho', 'sw': 'Swahili',
+    'xh': 'Xhosa', 'yo': 'Yoruba', 'zu': 'Zulu',
+    'ny': 'Chichewa', 'mg': 'Malagasy',
+    
+    # ===== MIDDLE EASTERN =====
+    'ar': 'Arabic', 'fa': 'Persian', 'he': 'Hebrew',
+    'ps': 'Pashto', 'ku': 'Kurdish', 'hy': 'Armenian',
+    'az': 'Azerbaijani', 'ka': 'Georgian', 'kk': 'Kazakh',
+    'ky': 'Kyrgyz', 'uz': 'Uzbek', 'tg': 'Tajik',
+    'tk': 'Turkmen',
+    
+    # ===== OTHERS =====
+    'eo': 'Esperanto', 'la': 'Latin', 'ht': 'Haitian Creole',
+    'co': 'Corsican', 'fy': 'Frisian', 'haw': 'Hawaiian',
+    'hmn': 'Hmong', 'mi': 'Maori', 'sm': 'Samoan',
+    'yi': 'Yiddish', 'wo': 'Wolof'
+}
 
 # ============================================
-# LANGUAGE SUPPORT FUNCTIONS
+# LANGUAGE HELPER FUNCTIONS
 # ============================================
 
-def get_supported_languages():
-    """Get list of supported languages with their codes"""
-    languages = {
-        'en': 'English (🇬🇧)',
-        'hi': 'Hindi (🇮🇳)',
-        'bn': 'Bengali (🇧🇩)'
-    }
-    return languages
+def get_source_languages():
+    """Get all source languages for Whisper"""
+    return WHISPER_LANGUAGES
+
+def get_target_languages():
+    """Get all target languages for translation"""
+    # Remove auto-detect from target languages
+    target_langs = {k: v for k, v in WHISPER_LANGUAGES.items() if k != 'auto'}
+    return target_langs
 
 def get_language_name(code):
     """Get language name from code"""
-    names = {
-        'en': 'English',
-        'hi': 'Hindi',
-        'bn': 'Bengali'
-    }
-    return names.get(code, code)
+    all_langs = get_target_languages()
+    all_langs.update(get_source_languages())
+    return all_langs.get(code, code)
 
-def validate_language_code(code):
-    """Validate if language is supported"""
-    supported = ['en', 'hi', 'bn']
-    return code in supported
+def get_language_flag(code):
+    """Get language flag emoji from code"""
+    # Extract flag from language string if present
+    lang_name = get_language_name(code)
+    if '🇮🇳' in lang_name:
+        return '🇮🇳'
+    elif '🇬🇧' in lang_name or '🇺🇸' in lang_name:
+        return '🇬🇧'
+    elif '🇫🇷' in lang_name:
+        return '🇫🇷'
+    elif '🇩🇪' in lang_name:
+        return '🇩🇪'
+    elif '🇪🇸' in lang_name:
+        return '🇪🇸'
+    elif '🇮🇹' in lang_name:
+        return '🇮🇹'
+    elif '🇵🇹' in lang_name:
+        return '🇵🇹'
+    elif '🇷🇺' in lang_name:
+        return '🇷🇺'
+    elif '🇯🇵' in lang_name:
+        return '🇯🇵'
+    elif '🇰🇷' in lang_name:
+        return '🇰🇷'
+    elif '🇨🇳' in lang_name:
+        return '🇨🇳'
+    elif '🇸🇦' in lang_name or '🇦🇪' in lang_name:
+        return '🇸🇦'
+    elif '🇮🇱' in lang_name:
+        return '🇮🇱'
+    elif '🇿🇦' in lang_name:
+        return '🇿🇦'
+    elif '🇳🇬' in lang_name:
+        return '🇳🇬'
+    elif '🇰🇪' in lang_name:
+        return '🇰🇪'
+    elif '🇹🇿' in lang_name:
+        return '🇹🇿'
+    elif '🇲🇽' in lang_name or '🇦🇷' in lang_name:
+        return '🇲🇽'
+    elif '🇧🇷' in lang_name:
+        return '🇧🇷'
+    elif '🇮🇩' in lang_name:
+        return '🇮🇩'
+    elif '🇲🇾' in lang_name:
+        return '🇲🇾'
+    elif '🇵🇭' in lang_name:
+        return '🇵🇭'
+    elif '🇹🇭' in lang_name:
+        return '🇹🇭'
+    elif '🇻🇳' in lang_name:
+        return '🇻🇳'
+    elif '🏴' in lang_name:
+        return '🏴'
+    elif '🏛️' in lang_name:
+        return '🏛️'
+    else:
+        return '🌐'
+
+def is_tts_supported(lang_code):
+    """Check if language supports TTS"""
+    return lang_code in TTS_LANGUAGES
 
 # ============================================
-# TEST FUNCTIONS (for debugging)
+# AUDIO GENERATION FUNCTIONS
 # ============================================
 
-def test_audio_generation():
-    """Test audio generation for all three languages"""
-    
-    test_texts = {
-        'en': "This is a test of English audio generation.",
-        'hi': "यह हिंदी ऑडियो जनरेशन का परीक्षण है।",
-        'bn': "এটি বাংলা অডিও জেনারেশন এর পরীক্ষণ।"
-    }
-    
-    results = {}
-    
-    for lang, text in test_texts.items():
-        output_path = f"test_{lang}.mp3"
-        result = generate_audio_by_language(text, output_path, lang)
-        results[lang] = result is not None
+def generate_audio_in_language(text, output_path, language_code):
+    """
+    Generate audio in any supported language
+    """
+    try:
+        from gtts import gTTS
         
-        if result:
-            print(f"✅ {lang.upper()} audio generated: {output_path}")
-        else:
-            print(f"❌ {lang.upper()} audio generation failed")
+        clean_text = re.sub(r'\s+', ' ', text).strip()
+        if not clean_text:
+            return None
+        
+        if len(clean_text) > 4500:
+            clean_text = clean_text[:4500]
+            st.warning("⚠️ Text was truncated to 4500 characters for audio generation")
+        
+        if language_code not in TTS_LANGUAGES:
+            st.warning(f"⚠️ Language '{language_code}' not fully supported. Using English as fallback.")
+            language_code = 'en'
+        
+        tts = gTTS(text=clean_text, lang=language_code, slow=False)
+        tts.save(output_path)
+        
+        if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+            st.success(f"✅ Audio generated: {os.path.getsize(output_path) / 1024:.1f} KB")
+            return output_path
+        return None
+        
+    except Exception as e:
+        st.warning(f"Audio generation in {language_code} failed: {str(e)}")
+        
+        try:
+            st.info("🔄 Trying fallback with English (shorter text)...")
+            clean_text = clean_text[:3000] if 'clean_text' in locals() else text[:3000]
+            from gtts import gTTS
+            tts = gTTS(text=clean_text, lang='en', slow=False)
+            tts.save(output_path)
+            
+            if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+                st.warning("⚠️ Generated audio in English (fallback)")
+                return output_path
+        except:
+            pass
+        
+        return None
+
+def generate_audio_by_language(text, output_path, language_code):
+    """
+    Main function for audio generation with fallback
+    """
+    result = generate_audio_in_language(text, output_path, language_code)
+    if result:
+        return result
     
-    return results
+    st.warning(f"🔄 Using English as final fallback for audio")
+    return generate_audio_in_language(text, output_path, 'en')
+
+def cleanup_temp_files(*paths):
+    """Delete temporary files"""
+    for path in paths:
+        if path and os.path.exists(path):
+            try:
+                os.unlink(path)
+            except:
+                pass

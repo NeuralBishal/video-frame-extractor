@@ -1,5 +1,5 @@
 """
-Main UI Components
+Main UI Components - No YouTube
 """
 import streamlit as st
 import os
@@ -24,7 +24,7 @@ def render_header():
     st.markdown("""
     <div class="main-header">
         <h1>🎬 Video Frame Extractor Pro</h1>
-        <p>Extract frames, generate documents, and create audio from any video</p>
+        <p>Extract frames, generate documents, and create audio from your videos</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -33,7 +33,7 @@ def render_features():
     col1, col2, col3, col4 = st.columns(4)
     
     features = [
-        ("📤", "Easy Upload", "Upload any video file or provide URL"),
+        ("📤", "Easy Upload", "Upload any video file to get started"),
         ("⚙️", "Customizable", "Adjust interval, quality & resize options"),
         ("📥", "Bulk Download", "Download all frames as ZIP archive"),
         ("📄", "Smart Documents", "PDF, PPTX & Audio from video content")
@@ -44,59 +44,25 @@ def render_features():
             feature_card(icon, title, desc)
 
 def render_video_input():
-    """Render video input section"""
-    st.markdown("## 📁 Input Video")
+    """Render video input section - File Upload Only"""
+    st.markdown("## 📁 Upload Video")
     
-    input_method = st.radio(
-        "Select input method:",
-        ["📤 Upload Video File", "🔗 Video URL"],
-        horizontal=True
+    uploaded_file = st.file_uploader(
+        "Choose a video file",
+        type=['mp4', 'avi', 'mov', 'mkv', 'webm', 'flv', 'm4v'],
+        help="Supported formats: MP4, AVI, MOV, MKV, WEBM, FLV"
     )
     
     video_path = None
     video_filename = None
     
-    if input_method == "📤 Upload Video File":
-        uploaded_file = st.file_uploader(
-            "Choose a video file",
-            type=['mp4', 'avi', 'mov', 'mkv', 'webm', 'flv', 'm4v'],
-            help="Supported formats: MP4, AVI, MOV, MKV, WEBM, FLV"
-        )
-        
-        if uploaded_file:
-            with st.spinner("Loading video..."):
-                tfile = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4')
-                tfile.write(uploaded_file.read())
-                video_path = tfile.name
-                video_filename = uploaded_file.name
-            success_badge(f"✅ Loaded: {uploaded_file.name}")
-    
-    else:
-        video_url = st.text_input(
-            "Enter video URL",
-            placeholder="https://example.com/video.mp4",
-            help="Direct link to video file"
-        )
-        
-        if video_url:
-            col1, col2 = st.columns([3, 1])
-            with col2:
-                download_btn = st.button("📥 Fetch Video", width="stretch")
-            
-            if download_btn:
-                with st.spinner("Downloading video from URL..."):
-                    try:
-                        parsed_url = urlparse(video_url)
-                        if not parsed_url.scheme in ['http', 'https']:
-                            st.error("Please enter a valid HTTP/HTTPS URL")
-                        else:
-                            video_path = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4').name
-                            urllib.request.urlretrieve(video_url, video_path)
-                            video_filename = os.path.basename(parsed_url.path) or "downloaded_video.mp4"
-                            success_badge("✅ Video downloaded successfully!")
-                    except Exception as e:
-                        st.error(f"Failed to download: {str(e)}")
-                        video_path = None
+    if uploaded_file:
+        with st.spinner("Loading video..."):
+            tfile = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4')
+            tfile.write(uploaded_file.read())
+            video_path = tfile.name
+            video_filename = uploaded_file.name
+        success_badge(f"✅ Loaded: {uploaded_file.name}")
     
     return video_path, video_filename
 
