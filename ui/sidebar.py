@@ -21,7 +21,7 @@ LANGUAGE_CATEGORIES = {
         "pa": "Punjabi", "ur": "Urdu", "or": "Odia", "as": "Assamese",
         "ne": "Nepali", "sd": "Sindhi", "sa": "Sanskrit", "ks": "Kashmiri",
         "kok": "Konkani", "mai": "Maithili", "sat": "Santali", "doi": "Dogri",
-        "mni": "Manipuri", "bodo": "Bodo", "si": "Sinhala", "dv": "Divehi"
+        "mni": "Manipuri", "bodo": "Bodo", "si": "Sinhala", "dv": "Divehi", 
     },
     "🇪🇺 European": {
         "en": "English", "es": "Spanish", "fr": "French", "de": "German",

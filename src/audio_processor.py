@@ -62,6 +62,7 @@ WHISPER_LANGUAGES = {
     'ks': 'Kashmiri 🇮🇳', 'kok': 'Konkani 🇮🇳', 'mai': 'Maithili 🇮🇳',
     'sat': 'Santali 🇮🇳', 'doi': 'Dogri 🇮🇳', 'mni': 'Manipuri 🇮🇳',
     'bodo': 'Bodo 🇮🇳', 'si': 'Sinhala 🇱🇰', 'dv': 'Divehi 🇲🇻',
+    
     # European Languages
     'en': 'English 🇬🇧', 'es': 'Spanish 🇪🇸', 'fr': 'French 🇫🇷',
     'de': 'German 🇩🇪', 'it': 'Italian 🇮🇹', 'pt': 'Portuguese 🇵🇹',
@@ -176,7 +177,7 @@ def get_language_name(code):
         'pa': 'Punjabi', 'ur': 'Urdu', 'or': 'Odia', 'as': 'Assamese',
         'ne': 'Nepali', 'sd': 'Sindhi', 'si': 'Sinhala', 'dv': 'Divehi',
         'sa': 'Sanskrit', 'ks': 'Kashmiri', 'kok': 'Konkani', 'mai': 'Maithili',
-        'sat': 'Santali', 'doi': 'Dogri', 'mni': 'Manipuri', 'bodo': 'Bodo',
+        'sat': 'Santali', 'doi': 'Dogri', 'mni': 'Manipuri', 'bodo': 'Bodo', 
         'en': 'English', 'es': 'Spanish', 'fr': 'French', 'de': 'German',
         'it': 'Italian', 'pt': 'Portuguese', 'nl': 'Dutch', 'pl': 'Polish',
         'ru': 'Russian', 'uk': 'Ukrainian', 'ro': 'Romanian', 'bg': 'Bulgarian',
